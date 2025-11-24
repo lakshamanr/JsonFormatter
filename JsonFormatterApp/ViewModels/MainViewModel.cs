@@ -386,7 +386,7 @@ namespace JsonFormatterApp.ViewModels
 
         private void ToggleTheme()
         {
-            var currentTheme = Properties.Settings.Default.Theme;
+            var currentTheme = JsonFormatterApp.Properties.Settings.Default.Theme;
             var newTheme = currentTheme == "Dark" ? "Light" : "Dark";
             App.ApplyTheme(newTheme);
             StatusMessage = $"Switched to {newTheme} theme";

@@ -18,7 +18,7 @@
 
     <!-- Button Styles -->
     <Style TargetType="Button">
-        <Setter Property="Background" Color="#E1E1E1"/>
+        <Setter Property="Background" Value="#E1E1E1"/>
         <Setter Property="Foreground" Value="#000000"/>
         <Setter Property="BorderBrush" Value="#ADADAD"/>
         <Setter Property="BorderThickness" Value="1"/>

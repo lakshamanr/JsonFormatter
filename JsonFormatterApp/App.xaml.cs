@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 
 namespace JsonFormatterApp
@@ -9,7 +10,7 @@ namespace JsonFormatterApp
             base.OnStartup(e);
 
             // Load saved theme preference
-            var theme = Properties.Settings.Default.Theme;
+            var theme = JsonFormatterApp.Properties.Settings.Default.Theme;
             ApplyTheme(theme);
         }
 
@@ -30,8 +31,8 @@ namespace JsonFormatterApp
             app.Resources.MergedDictionaries.Clear();
             app.Resources.MergedDictionaries.Add(themeDict);
 
-            Properties.Settings.Default.Theme = themeName;
-            Properties.Settings.Default.Save();
+            JsonFormatterApp.Properties.Settings.Default.Theme = themeName;
+            JsonFormatterApp.Properties.Settings.Default.Save();
         }
     }
 }
