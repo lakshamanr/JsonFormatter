@@ -44,7 +44,6 @@
 
                 <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                     <avalonEdit:TextEditor x:Name="LeftEditor"
-                                           Text="{Binding LeftJson, Mode=OneWay}"
                                            FontFamily="Consolas"
                                            FontSize="12"
                                            IsReadOnly="True"
@@ -71,7 +70,6 @@
 
                 <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                     <avalonEdit:TextEditor x:Name="RightEditor"
-                                           Text="{Binding RightJson, Mode=OneWay}"
                                            FontFamily="Consolas"
                                            FontSize="12"
                                            IsReadOnly="True"

@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 using JsonFormatterApp.ViewModels;
 
 namespace JsonFormatterApp.Views
@@ -12,6 +11,10 @@ namespace JsonFormatterApp.Views
 
             var viewModel = new CompareViewModel(leftTitle, leftJson, rightTitle, rightJson);
             DataContext = viewModel;
+
+            // Set editor text directly (AvalonEdit doesn't support binding on Text property)
+            LeftEditor.Text = leftJson;
+            RightEditor.Text = rightJson;
         }
     }
 }
