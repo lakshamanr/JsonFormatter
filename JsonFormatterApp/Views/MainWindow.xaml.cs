@@ -17,7 +17,7 @@ namespace JsonFormatterApp.Views
         private class EditorBinding
         {
             public TextEditor Editor { get; set; } = null!;
-            public EventHandler<System.Windows.Controls.TextChangedEventArgs>? TextChangedHandler { get; set; }
+            public EventHandler? TextChangedHandler { get; set; }
             public PropertyChangedEventHandler? PropertyChangedHandler { get; set; }
         }
 
@@ -48,7 +48,7 @@ namespace JsonFormatterApp.Views
             editor.Text = tab.JsonText;
 
             // Create text changed handler
-            EventHandler<System.Windows.Controls.TextChangedEventArgs> textChangedHandler = (s, args) =>
+            EventHandler textChangedHandler = (s, args) =>
             {
                 // Prevent recursive updates
                 if (editor.Text == tab.JsonText)
