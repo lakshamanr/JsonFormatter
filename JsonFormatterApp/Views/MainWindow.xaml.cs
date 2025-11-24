@@ -36,9 +36,14 @@ namespace JsonFormatterApp.Views
                         if (tab.JsonText != editor.Text)
                         {
                             tab.JsonText = editor.Text;
-                            _viewModel.ValidateJson();
-                            _viewModel.BuildTree();
-                            _viewModel.BuildTable();
+
+                            // Only update if this is the selected tab
+                            if (_viewModel.SelectedTab == tab)
+                            {
+                                _viewModel.ValidateJson();
+                                _viewModel.BuildTree();
+                                _viewModel.BuildTable();
+                            }
                         }
                     };
 

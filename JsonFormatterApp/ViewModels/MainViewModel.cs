@@ -43,6 +43,18 @@ namespace JsonFormatterApp.ViewModels
 
             // Create initial tab
             NewFileCommand.Execute(null);
+
+            // Watch for tab changes
+            PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(SelectedTab) && SelectedTab != null)
+                {
+                    // Refresh views when switching tabs
+                    ValidateJson();
+                    BuildTree();
+                    BuildTable();
+                }
+            };
         }
 
         #region Properties
@@ -545,42 +557,85 @@ namespace JsonFormatterApp.ViewModels
                 return;
             }
 
-            // Create a selection dialog
+            // Create a selection dialog with theme support
             var selectionWindow = new Window
             {
                 Title = "Select Tabs to Compare",
-                Width = 400,
-                Height = 300,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                Background = System.Windows.Media.Brushes.White
+                Width = 450,
+                Height = 350,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
+
+            // Apply current theme resources to the dialog
+            selectionWindow.Resources = Application.Current.Resources;
 
             var stackPanel = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
 
-            var label1 = new System.Windows.Controls.TextBlock { Text = "Select first tab:", Margin = new Thickness(0, 0, 0, 5) };
+            var titleBlock = new System.Windows.Controls.TextBlock
+            {
+                Text = "Compare Tabs",
+                FontSize = 18,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+
+            var label1 = new System.Windows.Controls.TextBlock
+            {
+                Text = "Select first tab:",
+                Margin = new Thickness(0, 0, 0, 5),
+                FontSize = 12
+            };
+
             var combo1 = new System.Windows.Controls.ComboBox
             {
                 ItemsSource = Tabs,
                 DisplayMemberPath = "Header",
-                SelectedIndex = 0,
-                Margin = new Thickness(0, 0, 0, 20)
+                SelectedIndex = SelectedTab != null ? Tabs.IndexOf(SelectedTab) : 0,
+                Margin = new Thickness(0, 0, 0, 20),
+                Padding = new Thickness(5),
+                FontSize = 12
             };
 
-            var label2 = new System.Windows.Controls.TextBlock { Text = "Select second tab:", Margin = new Thickness(0, 0, 0, 5) };
+            var label2 = new System.Windows.Controls.TextBlock
+            {
+                Text = "Select second tab:",
+                Margin = new Thickness(0, 0, 0, 5),
+                FontSize = 12
+            };
+
             var combo2 = new System.Windows.Controls.ComboBox
             {
                 ItemsSource = Tabs,
                 DisplayMemberPath = "Header",
-                SelectedIndex = Tabs.Count > 1 ? 1 : 0,
-                Margin = new Thickness(0, 0, 0, 20)
+                SelectedIndex = Tabs.Count > 1 ? (SelectedTab != null && Tabs.IndexOf(SelectedTab) == 0 ? 1 : 0) : 0,
+                Margin = new Thickness(0, 0, 0, 30),
+                Padding = new Thickness(5),
+                FontSize = 12
+            };
+
+            var buttonPanel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center
             };
 
             var compareButton = new System.Windows.Controls.Button
             {
                 Content = "Compare",
                 Width = 100,
-                Height = 30,
-                HorizontalAlignment = HorizontalAlignment.Center
+                Height = 35,
+                Margin = new Thickness(5),
+                FontSize = 12,
+                FontWeight = FontWeights.Bold
+            };
+
+            var cancelButton = new System.Windows.Controls.Button
+            {
+                Content = "Cancel",
+                Width = 100,
+                Height = 35,
+                Margin = new Thickness(5),
+                FontSize = 12
             };
 
             compareButton.Click += (s, e) =>
@@ -588,16 +643,23 @@ namespace JsonFormatterApp.ViewModels
                 var tab1 = combo1.SelectedItem as TabItem;
                 var tab2 = combo2.SelectedItem as TabItem;
 
-                if (tab1 != null && tab2 != null && tab1 != tab2)
+                if (tab1 != null && tab2 != null && tab1.Id != tab2.Id)
                 {
-                    var compareWindow = new CompareWindow(
-                        tab1.Header,
-                        tab1.JsonText,
-                        tab2.Header,
-                        tab2.JsonText
-                    );
-                    selectionWindow.Close();
-                    compareWindow.ShowDialog();
+                    try
+                    {
+                        var compareWindow = new CompareWindow(
+                            tab1.Header,
+                            tab1.JsonText,
+                            tab2.Header,
+                            tab2.JsonText
+                        );
+                        selectionWindow.Close();
+                        compareWindow.ShowDialog();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error comparing tabs: {ex.Message}", "Comparison Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
                 else
                 {
@@ -605,11 +667,20 @@ namespace JsonFormatterApp.ViewModels
                 }
             };
 
+            cancelButton.Click += (s, e) =>
+            {
+                selectionWindow.Close();
+            };
+
+            buttonPanel.Children.Add(compareButton);
+            buttonPanel.Children.Add(cancelButton);
+
+            stackPanel.Children.Add(titleBlock);
             stackPanel.Children.Add(label1);
             stackPanel.Children.Add(combo1);
             stackPanel.Children.Add(label2);
             stackPanel.Children.Add(combo2);
-            stackPanel.Children.Add(compareButton);
+            stackPanel.Children.Add(buttonPanel);
 
             selectionWindow.Content = stackPanel;
             selectionWindow.ShowDialog();
