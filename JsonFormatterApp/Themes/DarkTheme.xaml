@@ -1,0 +1,69 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Dark Theme Colors -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="#D4D4D4"/>
+    <SolidColorBrush x:Key="MenuBackgroundBrush" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#007ACC"/>
+    <SolidColorBrush x:Key="PanelHeaderBrush" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#3F3F46"/>
+    <SolidColorBrush x:Key="EditorBackgroundBrush" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="EditorForegroundBrush" Color="#D4D4D4"/>
+    <SolidColorBrush x:Key="LineNumbersForegroundBrush" Color="#858585"/>
+    <SolidColorBrush x:Key="TreeBackgroundBrush" Color="#252526"/>
+    <SolidColorBrush x:Key="SplitterBrush" Color="#3F3F46"/>
+    <SolidColorBrush x:Key="StatusIndicatorBrush" Color="#16825D"/>
+
+    <!-- Button Styles -->
+    <Style TargetType="Button">
+        <Setter Property="Background" Value="#333337"/>
+        <Setter Property="Foreground" Value="#D4D4D4"/>
+        <Setter Property="BorderBrush" Value="#3F3F46"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#3E3E42"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.5"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- TextBox Styles -->
+    <Style TargetType="TextBox">
+        <Setter Property="Background" Value="#1E1E1E"/>
+        <Setter Property="Foreground" Value="#D4D4D4"/>
+        <Setter Property="BorderBrush" Value="#3F3F46"/>
+        <Setter Property="CaretBrush" Value="#D4D4D4"/>
+        <Setter Property="SelectionBrush" Value="#264F78"/>
+    </Style>
+
+    <!-- ComboBox Styles -->
+    <Style TargetType="ComboBox">
+        <Setter Property="Background" Value="#333337"/>
+        <Setter Property="Foreground" Value="#D4D4D4"/>
+        <Setter Property="BorderBrush" Value="#3F3F46"/>
+    </Style>
+
+    <!-- MenuItem Styles -->
+    <Style TargetType="MenuItem">
+        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="Foreground" Value="#D4D4D4"/>
+    </Style>
+
+    <!-- TreeViewItem Styles -->
+    <Style TargetType="TreeViewItem">
+        <Setter Property="Foreground" Value="#D4D4D4"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#264F78"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+</ResourceDictionary>
