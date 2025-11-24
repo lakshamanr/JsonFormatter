@@ -37,16 +37,23 @@ namespace JsonFormatterApp.Views
             if (tab == null)
                 return;
 
-            // Remove existing binding if any
+            // Verify this is a unique editor instance for this tab
+            System.Diagnostics.Debug.WriteLine($"[Editor Loaded] Tab: {tab.Header}, TabId: {tab.Id}, EditorHashCode: {editor.GetHashCode()}");
+
+            // Remove existing binding if any (should not happen, but safety check)
             if (_editorBindings.ContainsKey(tab))
             {
+                System.Diagnostics.Debug.WriteLine($"[WARNING] Editor already exists for tab {tab.Header}, cleaning up old binding");
                 CleanupEditorBinding(tab);
             }
 
-            // IMPORTANT: Clear and set text to ensure clean state
-            // This prevents old content from lingering when creating new tabs
+            // CRITICAL: Each tab must have its own editor instance
+            // Clear the document completely before setting new content
             editor.Document.Text = string.Empty;
             editor.Text = tab.JsonText ?? string.Empty;
+
+            // Force document refresh to ensure clean state
+            editor.Document.UndoStack.ClearAll();
 
             // Create text changed handler
             EventHandler textChangedHandler = (s, args) =>
@@ -111,13 +118,19 @@ namespace JsonFormatterApp.Views
             if (tab == null)
                 return;
 
+            System.Diagnostics.Debug.WriteLine($"[Editor Unloaded] Tab: {tab.Header}, TabId: {tab.Id}, EditorHashCode: {editor.GetHashCode()}");
             CleanupEditorBinding(tab);
         }
 
         private void CleanupEditorBinding(Models.TabItem tab)
         {
             if (!_editorBindings.TryGetValue(tab, out var binding))
+            {
+                System.Diagnostics.Debug.WriteLine($"[Cleanup] No binding found for tab {tab.Header}");
                 return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[Cleanup] Removing binding for tab {tab.Header}, EditorHashCode: {binding.Editor.GetHashCode()}");
 
             // Remove event handlers
             if (binding.TextChangedHandler != null)
@@ -130,8 +143,13 @@ namespace JsonFormatterApp.Views
                 tab.PropertyChanged -= binding.PropertyChangedHandler;
             }
 
+            // Clear the editor content to prevent any lingering references
+            binding.Editor.Document.Text = string.Empty;
+
             // Remove from dictionary
             _editorBindings.Remove(tab);
+
+            System.Diagnostics.Debug.WriteLine($"[Cleanup] Completed for tab {tab.Header}. Active bindings: {_editorBindings.Count}");
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

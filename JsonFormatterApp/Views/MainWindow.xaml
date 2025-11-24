@@ -145,6 +145,13 @@
                     Background="{DynamicResource BackgroundBrush}"
                     BorderBrush="{DynamicResource BorderBrush}">
 
+            <!-- Disable virtualization to ensure each tab has its own content instance -->
+            <TabControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <TabPanel IsItemsHost="True"/>
+                </ItemsPanelTemplate>
+            </TabControl.ItemsPanel>
+
             <TabControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -184,8 +191,9 @@
                             </Border>
 
                             <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                <avalonEdit:TextEditor x:Name="JsonEditor"
-                                                       FontFamily="Consolas"
+                                <!-- Each tab gets its own TextEditor instance via DataTemplate -->
+                                <!-- DataContext is automatically set to the TabItem -->
+                                <avalonEdit:TextEditor FontFamily="Consolas"
                                                        FontSize="13"
                                                        ShowLineNumbers="True"
                                                        SyntaxHighlighting="JavaScript"
@@ -195,7 +203,8 @@
                                                        VerticalScrollBarVisibility="Auto"
                                                        HorizontalScrollBarVisibility="Auto"
                                                        Loaded="JsonEditor_Loaded"
-                                                       Unloaded="JsonEditor_Unloaded"/>
+                                                       Unloaded="JsonEditor_Unloaded"
+                                                       Tag="{Binding Id}"/>
                             </Border>
                         </Grid>
 
