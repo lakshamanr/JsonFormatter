@@ -5,7 +5,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <!-- <ApplicationIcon>Resources\app.ico</ApplicationIcon> -->
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <AssemblyName>JsonFormatterPro</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
@@ -21,6 +21,10 @@
 
   <ItemGroup>
     <Resource Include="Resources\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
 
 </Project>
