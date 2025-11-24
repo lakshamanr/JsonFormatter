@@ -1,12 +1,26 @@
 # 🎯 JSON Formatter & Validator Pro
 
-**A professional C# WPF desktop application for Windows** that provides comprehensive JSON formatting, validation, and conversion capabilities.
+**A professional C# WPF desktop application for Windows** that provides comprehensive JSON formatting, validation, and conversion capabilities with **Multi-Tab Support** and **Tabular View**.
 
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-2.0.0-brightgreen)
+
+## 🆕 What's New in v2.0
+
+- **🗂️ Multi-Tab Support** - Work with multiple JSON files simultaneously in separate tabs
+- **📊 Tabular View** - View JSON arrays as data tables for easier analysis
+- **🔀 Compare Tabs** - Compare two open tabs side-by-side with semantic difference detection
+- **Enhanced UI** - Improved layout with better organization and navigation
 
 ## ✨ Features
+
+### 🔹 Multi-Tab & Multi-Document
+- **Multiple Tabs** - Open and work with multiple JSON files in parallel
+- **Tab Management** - Easy tab switching, closing (Ctrl+W), and creation (Ctrl+N)
+- **Independent Views** - Each tab has its own editor, tree view, and table view
+- **Unsaved Changes Tracking** - Visual indicators for modified tabs
 
 ### 🔹 Core JSON Operations
 - **Format JSON** - Pretty print with customizable indentation (2 or 4 spaces)
@@ -14,6 +28,7 @@
 - **Validate JSON** - Real-time validation with detailed error messages showing exact line and column
 - **Syntax Highlighting** - Professional code editor with color-coded JSON (powered by AvalonEdit)
 - **Tree View Explorer** - Hierarchical visualization of JSON structure
+- **📊 Table View** - View JSON arrays as sortable, filterable data tables
 
 ### 🔹 File Management
 - **Open/Save JSON Files** - Support for `.json`, `.txt`, and `.config` files
@@ -33,6 +48,7 @@
 ### 🔹 Advanced Features
 - **JSON Schema Validation** - Validate JSON against JSON Schema files
 - **JSON Diff & Compare** - Compare two JSON files with semantic difference analysis
+- **🔀 Compare Tabs** - Select and compare any two open tabs side-by-side
 - **Clipboard Operations** - Quick copy/paste with auto-format
 - **Base64 Encode/Decode** - Encode and decode Base64 strings
 - **URL Encode/Decode** - URL encoding and decoding support
@@ -99,14 +115,13 @@ Download the latest release from the [Releases](https://github.com/yourusername/
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+N` | New File |
-| `Ctrl+O` | Open File |
-| `Ctrl+S` | Save File |
+| `Ctrl+N` | New Tab |
+| `Ctrl+W` | Close Current Tab |
+| `Ctrl+O` | Open File in New Tab |
+| `Ctrl+S` | Save Current File |
 | `Ctrl+Shift+S` | Save As |
 | `Ctrl+F` | Format JSON |
 | `Ctrl+M` | Minify JSON |
-| `Ctrl+C` | Copy to Clipboard |
-| `Ctrl+V` | Paste from Clipboard |
 | `Ctrl+T` | Toggle Theme |
 
 ## 🏗️ Architecture

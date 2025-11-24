@@ -1,0 +1,247 @@
+<Window x:Class="JsonFormatterApp.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:converters="clr-namespace:JsonFormatterApp.Converters"
+        mc:Ignorable="d"
+        Title="JSON Formatter &amp; Validator Pro"
+        Height="800" Width="1400"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BackgroundBrush}">
+
+    <Window.Resources>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="F" Modifiers="Ctrl" Command="{Binding FormatJsonCommand}"/>
+        <KeyBinding Key="M" Modifiers="Ctrl" Command="{Binding MinifyJsonCommand}"/>
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding OpenFileCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveFileCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl+Shift" Command="{Binding SaveAsCommand}"/>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NewFileCommand}"/>
+        <KeyBinding Key="C" Modifiers="Ctrl" Command="{Binding CopyCommand}"/>
+        <KeyBinding Key="V" Modifiers="Ctrl" Command="{Binding PasteCommand}"/>
+        <KeyBinding Key="T" Modifiers="Ctrl" Command="{Binding ToggleThemeCommand}"/>
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Menu Bar -->
+        <Menu Grid.Row="0" Background="{DynamicResource MenuBackgroundBrush}">
+            <MenuItem Header="_File" Foreground="{DynamicResource ForegroundBrush}">
+                <MenuItem Header="_New" Command="{Binding NewFileCommand}" InputGestureText="Ctrl+N"/>
+                <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGestureText="Ctrl+O"/>
+                <MenuItem Header="_Save" Command="{Binding SaveFileCommand}" InputGestureText="Ctrl+S"/>
+                <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGestureText="Ctrl+Shift+S"/>
+                <Separator/>
+                <MenuItem Header="Recent Files" ItemsSource="{Binding RecentFiles}">
+                    <MenuItem.ItemTemplate>
+                        <DataTemplate>
+                            <MenuItem Header="{Binding FilePath}"
+                                      Command="{Binding DataContext.OpenRecentFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      CommandParameter="{Binding FilePath}"/>
+                        </DataTemplate>
+                    </MenuItem.ItemTemplate>
+                </MenuItem>
+                <MenuItem Header="Clear Recent Files" Command="{Binding ClearRecentFilesCommand}"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="Exit_Click"/>
+            </MenuItem>
+
+            <MenuItem Header="_Edit" Foreground="{DynamicResource ForegroundBrush}">
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGestureText="Ctrl+C"/>
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGestureText="Ctrl+V"/>
+                <Separator/>
+                <MenuItem Header="_Format JSON" Command="{Binding FormatJsonCommand}" InputGestureText="Ctrl+F"/>
+                <MenuItem Header="_Minify JSON" Command="{Binding MinifyJsonCommand}" InputGestureText="Ctrl+M"/>
+                <MenuItem Header="_Validate JSON" Command="{Binding ValidateJsonCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="_Tools" Foreground="{DynamicResource ForegroundBrush}">
+                <MenuItem Header="Convert to _XML" Command="{Binding ConvertToXmlCommand}"/>
+                <MenuItem Header="Convert to _C# Classes" Command="{Binding ConvertToCSharpCommand}"/>
+                <MenuItem Header="Convert to _SQL" Command="{Binding ConvertToSqlCommand}"/>
+                <MenuItem Header="Convert to _YAML" Command="{Binding ConvertToYamlCommand}"/>
+                <Separator/>
+                <MenuItem Header="Base64 _Encode" Command="{Binding Base64EncodeCommand}"/>
+                <MenuItem Header="Base64 _Decode" Command="{Binding Base64DecodeCommand}"/>
+                <MenuItem Header="URL Encode" Command="{Binding UrlEncodeCommand}"/>
+                <MenuItem Header="URL Decode" Command="{Binding UrlDecodeCommand}"/>
+                <Separator/>
+                <MenuItem Header="Validate Against _Schema..." Command="{Binding ValidateSchemaCommand}"/>
+                <MenuItem Header="_Compare JSON..." Command="{Binding CompareJsonCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="_View" Foreground="{DynamicResource ForegroundBrush}">
+                <MenuItem Header="Toggle _Theme" Command="{Binding ToggleThemeCommand}" InputGestureText="Ctrl+T"/>
+                <MenuItem Header="Refresh _Tree" Command="{Binding BuildTreeCommand}"/>
+            </MenuItem>
+
+            <MenuItem Header="_Help" Foreground="{DynamicResource ForegroundBrush}">
+                <MenuItem Header="_About" Click="About_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar -->
+        <ToolBar Grid.Row="1" Background="{DynamicResource ToolbarBackgroundBrush}" Padding="5">
+            <Button Command="{Binding NewFileCommand}" ToolTip="New (Ctrl+N)" Padding="5">
+                <TextBlock Text="📄 New" FontSize="12"/>
+            </Button>
+            <Button Command="{Binding OpenFileCommand}" ToolTip="Open (Ctrl+O)" Padding="5">
+                <TextBlock Text="📂 Open" FontSize="12"/>
+            </Button>
+            <Button Command="{Binding SaveFileCommand}" ToolTip="Save (Ctrl+S)" Padding="5">
+                <TextBlock Text="💾 Save" FontSize="12"/>
+            </Button>
+            <Separator/>
+            <Button Command="{Binding FormatJsonCommand}" ToolTip="Format JSON (Ctrl+F)" Padding="5">
+                <TextBlock Text="✨ Format" FontSize="12" FontWeight="Bold"/>
+            </Button>
+            <Button Command="{Binding MinifyJsonCommand}" ToolTip="Minify JSON (Ctrl+M)" Padding="5">
+                <TextBlock Text="⚡ Minify" FontSize="12" FontWeight="Bold"/>
+            </Button>
+            <Button Command="{Binding ValidateJsonCommand}" ToolTip="Validate JSON" Padding="5">
+                <TextBlock Text="✓ Validate" FontSize="12" FontWeight="Bold"/>
+            </Button>
+            <Separator/>
+            <Button Command="{Binding BuildTreeCommand}" ToolTip="Build Tree View" Padding="5">
+                <TextBlock Text="🌳 Tree" FontSize="12"/>
+            </Button>
+            <Separator/>
+            <Button Command="{Binding ToggleThemeCommand}" ToolTip="Toggle Theme (Ctrl+T)" Padding="5">
+                <TextBlock Text="🌙 Theme" FontSize="12"/>
+            </Button>
+            <Separator/>
+            <TextBlock Text="Indent:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource ForegroundBrush}"/>
+            <ComboBox SelectedItem="{Binding IndentSize}" Width="60">
+                <ComboBoxItem Content="2" Tag="2"/>
+                <ComboBoxItem Content="4" Tag="4" IsSelected="True"/>
+            </ComboBox>
+        </ToolBar>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel: Text Editor -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="5">
+                    <TextBlock Text="JSON Editor" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>
+                </Border>
+
+                <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <avalonEdit:TextEditor x:Name="JsonEditor"
+                                           FontFamily="Consolas"
+                                           FontSize="13"
+                                           ShowLineNumbers="True"
+                                           SyntaxHighlighting="JavaScript"
+                                           Background="{DynamicResource EditorBackgroundBrush}"
+                                           Foreground="{DynamicResource EditorForegroundBrush}"
+                                           LineNumbersForeground="{DynamicResource LineNumbersForegroundBrush}"
+                                           VerticalScrollBarVisibility="Auto"
+                                           HorizontalScrollBarVisibility="Auto"/>
+                </Border>
+            </Grid>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource SplitterBrush}"/>
+
+            <!-- Right Panel: Tree View -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="5">
+                    <TextBlock Text="JSON Tree View" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>
+                </Border>
+
+                <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource TreeBackgroundBrush}">
+                    <TreeView ItemsSource="{Binding TreeNodes}" Background="Transparent" Foreground="{DynamicResource ForegroundBrush}">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Key}" FontWeight="Bold" Margin="0,0,5,0"/>
+                                    <TextBlock Text=": " Margin="0,0,3,0"/>
+                                    <TextBlock Text="{Binding Value}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Type}" Value="String">
+                                                        <Setter Property="Foreground" Value="#CE9178"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Number">
+                                                        <Setter Property="Foreground" Value="#B5CEA8"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Boolean">
+                                                        <Setter Property="Foreground" Value="#569CD6"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Null">
+                                                        <Setter Property="Foreground" Value="#808080"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" Background="{DynamicResource StatusBarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Border Background="{DynamicResource StatusIndicatorBrush}" CornerRadius="3" Padding="10,3" Margin="5,0">
+                        <TextBlock Foreground="White" FontWeight="Bold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="✓ Valid JSON"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsValid}" Value="False">
+                                            <Setter Property="Text" Value="✗ Invalid JSON"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+                    <TextBlock Text="{Binding CurrentFilePath, StringFormat='File: {0}'}"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               Visibility="{Binding CurrentFilePath, Converter={StaticResource StringToVisibilityConverter}}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

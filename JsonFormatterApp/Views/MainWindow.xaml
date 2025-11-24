@@ -6,8 +6,8 @@
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:converters="clr-namespace:JsonFormatterApp.Converters"
         mc:Ignorable="d"
-        Title="JSON Formatter &amp; Validator Pro"
-        Height="800" Width="1400"
+        Title="JSON Formatter &amp; Validator Pro - Multi-Tab Edition"
+        Height="800" Width="1600"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BackgroundBrush}">
 
@@ -22,9 +22,8 @@
         <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveFileCommand}"/>
         <KeyBinding Key="S" Modifiers="Ctrl+Shift" Command="{Binding SaveAsCommand}"/>
         <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NewFileCommand}"/>
-        <KeyBinding Key="C" Modifiers="Ctrl" Command="{Binding CopyCommand}"/>
-        <KeyBinding Key="V" Modifiers="Ctrl" Command="{Binding PasteCommand}"/>
         <KeyBinding Key="T" Modifiers="Ctrl" Command="{Binding ToggleThemeCommand}"/>
+        <KeyBinding Key="W" Modifiers="Ctrl" Command="{Binding CloseTabCommand}" CommandParameter="{Binding SelectedTab}"/>
     </Window.InputBindings>
 
     <Grid>
@@ -38,10 +37,12 @@
         <!-- Menu Bar -->
         <Menu Grid.Row="0" Background="{DynamicResource MenuBackgroundBrush}">
             <MenuItem Header="_File" Foreground="{DynamicResource ForegroundBrush}">
-                <MenuItem Header="_New" Command="{Binding NewFileCommand}" InputGestureText="Ctrl+N"/>
+                <MenuItem Header="_New Tab" Command="{Binding NewFileCommand}" InputGestureText="Ctrl+N"/>
                 <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGestureText="Ctrl+O"/>
                 <MenuItem Header="_Save" Command="{Binding SaveFileCommand}" InputGestureText="Ctrl+S"/>
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGestureText="Ctrl+Shift+S"/>
+                <Separator/>
+                <MenuItem Header="_Close Tab" Command="{Binding CloseTabCommand}" CommandParameter="{Binding SelectedTab}" InputGestureText="Ctrl+W"/>
                 <Separator/>
                 <MenuItem Header="Recent Files" ItemsSource="{Binding RecentFiles}">
                     <MenuItem.ItemTemplate>
@@ -58,8 +59,8 @@
             </MenuItem>
 
             <MenuItem Header="_Edit" Foreground="{DynamicResource ForegroundBrush}">
-                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGestureText="Ctrl+C"/>
-                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGestureText="Ctrl+V"/>
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}"/>
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Format JSON" Command="{Binding FormatJsonCommand}" InputGestureText="Ctrl+F"/>
                 <MenuItem Header="_Minify JSON" Command="{Binding MinifyJsonCommand}" InputGestureText="Ctrl+M"/>
@@ -78,12 +79,14 @@
                 <MenuItem Header="URL Decode" Command="{Binding UrlDecodeCommand}"/>
                 <Separator/>
                 <MenuItem Header="Validate Against _Schema..." Command="{Binding ValidateSchemaCommand}"/>
-                <MenuItem Header="_Compare JSON..." Command="{Binding CompareJsonCommand}"/>
+                <MenuItem Header="_Compare with File..." Command="{Binding CompareJsonCommand}"/>
+                <MenuItem Header="Compare _Tabs..." Command="{Binding CompareTabsCommand}"/>
             </MenuItem>
 
             <MenuItem Header="_View" Foreground="{DynamicResource ForegroundBrush}">
                 <MenuItem Header="Toggle _Theme" Command="{Binding ToggleThemeCommand}" InputGestureText="Ctrl+T"/>
                 <MenuItem Header="Refresh _Tree" Command="{Binding BuildTreeCommand}"/>
+                <MenuItem Header="Refresh _Table" Command="{Binding BuildTableCommand}"/>
             </MenuItem>
 
             <MenuItem Header="_Help" Foreground="{DynamicResource ForegroundBrush}">
@@ -93,7 +96,7 @@
 
         <!-- Toolbar -->
         <ToolBar Grid.Row="1" Background="{DynamicResource ToolbarBackgroundBrush}" Padding="5">
-            <Button Command="{Binding NewFileCommand}" ToolTip="New (Ctrl+N)" Padding="5">
+            <Button Command="{Binding NewFileCommand}" ToolTip="New Tab (Ctrl+N)" Padding="5">
                 <TextBlock Text="📄 New" FontSize="12"/>
             </Button>
             <Button Command="{Binding OpenFileCommand}" ToolTip="Open (Ctrl+O)" Padding="5">
@@ -113,8 +116,15 @@
                 <TextBlock Text="✓ Validate" FontSize="12" FontWeight="Bold"/>
             </Button>
             <Separator/>
-            <Button Command="{Binding BuildTreeCommand}" ToolTip="Build Tree View" Padding="5">
+            <Button Command="{Binding BuildTreeCommand}" ToolTip="Refresh Tree View" Padding="5">
                 <TextBlock Text="🌳 Tree" FontSize="12"/>
+            </Button>
+            <Button Command="{Binding BuildTableCommand}" ToolTip="Refresh Table View" Padding="5">
+                <TextBlock Text="📊 Table" FontSize="12"/>
+            </Button>
+            <Separator/>
+            <Button Command="{Binding CompareTabsCommand}" ToolTip="Compare Tabs" Padding="5">
+                <TextBlock Text="🔀 Compare" FontSize="12"/>
             </Button>
             <Separator/>
             <Button Command="{Binding ToggleThemeCommand}" ToolTip="Toggle Theme (Ctrl+T)" Padding="5">
@@ -123,91 +133,156 @@
             <Separator/>
             <TextBlock Text="Indent:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource ForegroundBrush}"/>
             <ComboBox SelectedItem="{Binding IndentSize}" Width="60">
-                <ComboBoxItem Content="2" Tag="2"/>
-                <ComboBoxItem Content="4" Tag="4" IsSelected="True"/>
+                <ComboBoxItem Content="2" Tag="2" IsSelected="True"/>
+                <ComboBoxItem Content="4" Tag="4"/>
             </ComboBox>
         </ToolBar>
 
-        <!-- Main Content Area -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <!-- Main Tab Control -->
+        <TabControl Grid.Row="2"
+                    ItemsSource="{Binding Tabs}"
+                    SelectedItem="{Binding SelectedTab}"
+                    Background="{DynamicResource BackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}">
 
-            <!-- Left Panel: Text Editor -->
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Header}" VerticalAlignment="Center"/>
+                        <Button Content="✕"
+                                Command="{Binding DataContext.CloseTabCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Margin="10,0,0,0"
+                                Padding="5,0"
+                                FontSize="14"
+                                ToolTip="Close Tab (Ctrl+W)"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
 
-                <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="5">
-                    <TextBlock Text="JSON Editor" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>
-                </Border>
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                    <avalonEdit:TextEditor x:Name="JsonEditor"
-                                           FontFamily="Consolas"
-                                           FontSize="13"
-                                           ShowLineNumbers="True"
-                                           SyntaxHighlighting="JavaScript"
-                                           Background="{DynamicResource EditorBackgroundBrush}"
-                                           Foreground="{DynamicResource EditorForegroundBrush}"
-                                           LineNumbersForeground="{DynamicResource LineNumbersForegroundBrush}"
-                                           VerticalScrollBarVisibility="Auto"
-                                           HorizontalScrollBarVisibility="Auto"/>
-                </Border>
-            </Grid>
+                        <!-- Left Panel: Text Editor -->
+                        <Grid Grid.Column="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource SplitterBrush}"/>
+                            <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="5">
+                                <TextBlock Text="JSON Editor" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>
+                            </Border>
 
-            <!-- Right Panel: Tree View -->
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                            <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <avalonEdit:TextEditor x:Name="JsonEditor"
+                                                       FontFamily="Consolas"
+                                                       FontSize="13"
+                                                       ShowLineNumbers="True"
+                                                       SyntaxHighlighting="JavaScript"
+                                                       Background="{DynamicResource EditorBackgroundBrush}"
+                                                       Foreground="{DynamicResource EditorForegroundBrush}"
+                                                       LineNumbersForeground="{DynamicResource LineNumbersForegroundBrush}"
+                                                       VerticalScrollBarVisibility="Auto"
+                                                       HorizontalScrollBarVisibility="Auto"
+                                                       Loaded="JsonEditor_Loaded"
+                                                       Unloaded="JsonEditor_Unloaded"/>
+                            </Border>
+                        </Grid>
 
-                <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="5">
-                    <TextBlock Text="JSON Tree View" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>
-                </Border>
+                        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{DynamicResource SplitterBrush}"/>
 
-                <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource TreeBackgroundBrush}">
-                    <TreeView ItemsSource="{Binding TreeNodes}" Background="Transparent" Foreground="{DynamicResource ForegroundBrush}">
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Key}" FontWeight="Bold" Margin="0,0,5,0"/>
-                                    <TextBlock Text=": " Margin="0,0,3,0"/>
-                                    <TextBlock Text="{Binding Value}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Type}" Value="String">
-                                                        <Setter Property="Foreground" Value="#CE9178"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Type}" Value="Number">
-                                                        <Setter Property="Foreground" Value="#B5CEA8"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Type}" Value="Boolean">
-                                                        <Setter Property="Foreground" Value="#569CD6"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Type}" Value="Null">
-                                                        <Setter Property="Foreground" Value="#808080"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
-                </Border>
-            </Grid>
-        </Grid>
+                        <!-- Right Panel: Tree and Table Views -->
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Background="{DynamicResource PanelHeaderBrush}" Padding="5">
+                                <TextBlock Text="Views" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ForegroundBrush}"/>
+                            </Border>
+
+                            <TabControl Grid.Row="1" Background="{DynamicResource BackgroundBrush}">
+                                <!-- Tree View Tab -->
+                                <TabItem Header="Tree">
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource TreeBackgroundBrush}">
+                                        <TreeView ItemsSource="{Binding TreeNodes}" Background="Transparent" Foreground="{DynamicResource ForegroundBrush}">
+                                            <TreeView.ItemTemplate>
+                                                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Key}" FontWeight="Bold" Margin="0,0,5,0"/>
+                                                        <TextBlock Text=": " Margin="0,0,3,0"/>
+                                                        <TextBlock Text="{Binding Value}">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="String">
+                                                                            <Setter Property="Foreground" Value="#CE9178"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="Number">
+                                                                            <Setter Property="Foreground" Value="#B5CEA8"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="Boolean">
+                                                                            <Setter Property="Foreground" Value="#569CD6"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Type}" Value="Null">
+                                                                            <Setter Property="Foreground" Value="#808080"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </HierarchicalDataTemplate>
+                                            </TreeView.ItemTemplate>
+                                        </TreeView>
+                                    </Border>
+                                </TabItem>
+
+                                <!-- Table View Tab -->
+                                <TabItem Header="Table">
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource TreeBackgroundBrush}">
+                                        <DataGrid ItemsSource="{Binding TableData}"
+                                                  AutoGenerateColumns="True"
+                                                  IsReadOnly="True"
+                                                  Background="{DynamicResource TreeBackgroundBrush}"
+                                                  Foreground="{DynamicResource ForegroundBrush}"
+                                                  GridLinesVisibility="All"
+                                                  HeadersVisibility="All"
+                                                  AlternatingRowBackground="{DynamicResource EditorBackgroundBrush}"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  CanUserReorderColumns="True"
+                                                  CanUserResizeColumns="True"
+                                                  CanUserResizeRows="False"
+                                                  CanUserSortColumns="True">
+                                            <DataGrid.Resources>
+                                                <Style TargetType="DataGridColumnHeader">
+                                                    <Setter Property="Background" Value="{DynamicResource PanelHeaderBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                    <Setter Property="Padding" Value="5"/>
+                                                </Style>
+                                            </DataGrid.Resources>
+                                        </DataGrid>
+                                    </Border>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
 
         <!-- Status Bar -->
         <Border Grid.Row="3" Background="{DynamicResource StatusBarBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="5">
@@ -217,29 +292,45 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0"
+                           Text="{Binding SelectedTab.StatusMessage}"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Border Background="{DynamicResource StatusIndicatorBrush}" CornerRadius="3" Padding="10,3" Margin="5,0">
+                    <Border CornerRadius="3" Padding="10,3" Margin="5,0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#16825D"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTab.IsValid}" Value="False">
+                                        <Setter Property="Background" Value="#D13438"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <TextBlock Foreground="White" FontWeight="Bold">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Text" Value="✓ Valid JSON"/>
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsValid}" Value="False">
+                                        <DataTrigger Binding="{Binding SelectedTab.IsValid}" Value="False">
                                             <Setter Property="Text" Value="✗ Invalid JSON"/>
-                                            <Setter Property="Foreground" Value="White"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
                     </Border>
-                    <TextBlock Text="{Binding CurrentFilePath, StringFormat='File: {0}'}"
-                               Foreground="{DynamicResource ForegroundBrush}"
+                    <TextBlock Text="{Binding SelectedTab.FilePath, StringFormat='File: {0}'}"
+                               Foreground="White"
                                VerticalAlignment="Center"
                                Margin="10,0,0,0"
-                               Visibility="{Binding CurrentFilePath, Converter={StaticResource StringToVisibilityConverter}}"/>
+                               Visibility="{Binding SelectedTab.FilePath, Converter={StaticResource StringToVisibilityConverter}}"/>
+                    <TextBlock Text="{Binding Tabs.Count, StringFormat='Tabs: {0}'}"
+                               Foreground="White"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>
