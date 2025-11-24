@@ -15,6 +15,7 @@ namespace JsonFormatterApp.Models
         private ObservableCollection<JsonTreeNode> _treeNodes = new();
         private System.Data.DataTable? _tableData;
         private string _statusMessage = "Ready";
+        private bool _isInitializing = false;
 
         public string Header
         {
@@ -29,7 +30,11 @@ namespace JsonFormatterApp.Models
             {
                 if (SetProperty(ref _jsonText, value))
                 {
-                    IsDirty = true;
+                    // Only mark as dirty if not during initialization
+                    if (!_isInitializing)
+                    {
+                        IsDirty = true;
+                    }
                 }
             }
         }
@@ -83,6 +88,22 @@ namespace JsonFormatterApp.Models
         }
 
         public Guid Id { get; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Set JSON text without marking the tab as dirty (for initial load)
+        /// </summary>
+        public void SetJsonTextWithoutDirty(string jsonText)
+        {
+            _isInitializing = true;
+            try
+            {
+                JsonText = jsonText;
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
+        }
 
         private void UpdateHeader()
         {
