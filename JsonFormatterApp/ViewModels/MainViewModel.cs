@@ -44,15 +44,26 @@ namespace JsonFormatterApp.ViewModels
             // Create initial tab
             NewFileCommand.Execute(null);
 
-            // Watch for tab changes
+            // Watch for tab changes - only refresh if tab has content
             PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(SelectedTab) && SelectedTab != null)
                 {
-                    // Refresh views when switching tabs
-                    ValidateJson();
-                    BuildTree();
-                    BuildTable();
+                    // Only refresh views if the tab has JSON content
+                    if (!string.IsNullOrWhiteSpace(SelectedTab.JsonText))
+                    {
+                        ValidateJson();
+                        BuildTree();
+                        BuildTable();
+                    }
+                    else
+                    {
+                        // Clear views for empty tabs
+                        SelectedTab.IsValid = true;
+                        SelectedTab.StatusMessage = "Ready";
+                        SelectedTab.TreeNodes.Clear();
+                        SelectedTab.TableData = null;
+                    }
                 }
             };
         }
@@ -285,6 +296,14 @@ namespace JsonFormatterApp.ViewModels
             if (SelectedTab == null)
                 return;
 
+            // Check if there's any content to format
+            if (string.IsNullOrWhiteSpace(SelectedTab.JsonText))
+            {
+                SelectedTab.StatusMessage = "No JSON content to format";
+                MessageBox.Show("Please enter some JSON content first.", "No Content", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
             try
             {
                 SelectedTab.JsonText = _jsonService.FormatJson(SelectedTab.JsonText, IndentSize);
@@ -303,6 +322,14 @@ namespace JsonFormatterApp.ViewModels
         {
             if (SelectedTab == null)
                 return;
+
+            // Check if there's any content to minify
+            if (string.IsNullOrWhiteSpace(SelectedTab.JsonText))
+            {
+                SelectedTab.StatusMessage = "No JSON content to minify";
+                MessageBox.Show("Please enter some JSON content first.", "No Content", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
             try
             {

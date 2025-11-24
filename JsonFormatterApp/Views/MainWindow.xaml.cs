@@ -43,9 +43,10 @@ namespace JsonFormatterApp.Views
                 CleanupEditorBinding(tab);
             }
 
-            // Set initial text without triggering events
-            editor.TextChanged -= null; // Ensure no handlers first
-            editor.Text = tab.JsonText;
+            // IMPORTANT: Clear and set text to ensure clean state
+            // This prevents old content from lingering when creating new tabs
+            editor.Document.Text = string.Empty;
+            editor.Text = tab.JsonText ?? string.Empty;
 
             // Create text changed handler
             EventHandler textChangedHandler = (s, args) =>
@@ -57,12 +58,18 @@ namespace JsonFormatterApp.Views
                 // Update the tab's JSON text
                 tab.JsonText = editor.Text;
 
-                // Only update views if this is the selected tab
-                if (_viewModel.SelectedTab == tab)
+                // Only update views if this is the selected tab AND it has content
+                if (_viewModel.SelectedTab == tab && !string.IsNullOrWhiteSpace(editor.Text))
                 {
                     _viewModel.ValidateJson();
                     _viewModel.BuildTree();
                     _viewModel.BuildTable();
+                }
+                else if (_viewModel.SelectedTab == tab && string.IsNullOrWhiteSpace(editor.Text))
+                {
+                    // Clear validation for empty content
+                    tab.IsValid = true;
+                    tab.StatusMessage = "Ready";
                 }
             };
 
