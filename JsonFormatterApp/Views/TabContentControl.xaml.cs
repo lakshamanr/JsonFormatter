@@ -13,17 +13,26 @@ namespace JsonFormatterApp.Views
         private MainViewModel? _viewModel;
         private EventHandler? _textChangedHandler;
         private PropertyChangedEventHandler? _propertyChangedHandler;
+        private bool _isInitializing = false;
 
         public TabContentControl()
         {
             InitializeComponent();
-            Loaded += TabContentControl_Loaded;
+
+            // Use DataContextChanged instead of Loaded to ensure DataContext is available
+            DataContextChanged += TabContentControl_DataContextChanged;
             Unloaded += TabContentControl_Unloaded;
         }
 
-        private void TabContentControl_Loaded(object sender, RoutedEventArgs e)
+        private void TabContentControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            // Get the TabItem from DataContext
+            // Clean up previous bindings if any
+            if (_tab != null)
+            {
+                Cleanup();
+            }
+
+            // Get the new TabItem from DataContext
             _tab = DataContext as Models.TabItem;
             if (_tab == null)
                 return;
@@ -34,38 +43,45 @@ namespace JsonFormatterApp.Views
             if (_viewModel == null)
                 return;
 
-            System.Diagnostics.Debug.WriteLine($"[TabContent Loaded] Tab: {_tab.Header}, TabId: {_tab.Id}, EditorHashCode: {JsonEditor.GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"[TabContent Init] Tab: {_tab.Header}, TabId: {_tab.Id}, EditorHashCode: {JsonEditor.GetHashCode()}");
 
-            // CRITICAL: Clear and initialize this editor with the tab's content
-            JsonEditor.Document.Text = string.Empty;
-            JsonEditor.Text = _tab.JsonText ?? string.Empty;
-            JsonEditor.Document.UndoStack.ClearAll();
+            // Initialize the editor with the tab's content
+            _isInitializing = true;
+            try
+            {
+                // CRITICAL: Clear and initialize this editor with the tab's content
+                JsonEditor.Document.Text = string.Empty;
+                JsonEditor.Text = _tab.JsonText ?? string.Empty;
+                JsonEditor.Document.UndoStack.ClearAll();
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
 
             // Create text changed handler for THIS specific editor
             _textChangedHandler = (s, args) =>
             {
-                if (_tab == null || JsonEditor.Text == _tab.JsonText)
+                // Skip if we're initializing
+                if (_isInitializing || _tab == null)
+                    return;
+
+                // Prevent recursive updates
+                if (JsonEditor.Text == _tab.JsonText)
                     return;
 
                 // Update the tab's JSON text
+                // Note: Setting JsonText will trigger IsDirty = true in the TabItem model
                 _tab.JsonText = JsonEditor.Text;
 
-                // Only update views if this is the selected tab AND it has content
-                if (_viewModel?.SelectedTab == _tab && !string.IsNullOrWhiteSpace(JsonEditor.Text))
-                {
-                    _viewModel.ValidateJson();
-                    _viewModel.BuildTree();
-                    _viewModel.BuildTable();
-                }
-                else if (_viewModel?.SelectedTab == _tab && string.IsNullOrWhiteSpace(JsonEditor.Text))
-                {
-                    // Clear validation for empty content
-                    _tab.IsValid = true;
-                    _tab.StatusMessage = "Ready";
-                }
+                // The MainViewModel already handles validation/tree/table updates
+                // when SelectedTab changes or when commands are executed.
+                // We don't need to duplicate that logic here.
+
+                System.Diagnostics.Debug.WriteLine($"[TabContent] Text changed for tab {_tab.Header}, Length: {JsonEditor.Text.Length}");
             };
 
-            // Create property changed handler
+            // Create property changed handler to sync external changes back to editor
             _propertyChangedHandler = (s, args) =>
             {
                 if (args.PropertyName == nameof(Models.TabItem.JsonText) && _tab != null)
@@ -74,11 +90,21 @@ namespace JsonFormatterApp.Views
                     if (JsonEditor.Text == _tab.JsonText)
                         return;
 
+                    System.Diagnostics.Debug.WriteLine($"[TabContent] Syncing JsonText to editor for tab {_tab.Header}");
+
                     // Temporarily remove text changed handler to prevent recursion
                     if (_textChangedHandler != null)
                         JsonEditor.TextChanged -= _textChangedHandler;
 
-                    JsonEditor.Text = _tab.JsonText;
+                    _isInitializing = true;
+                    try
+                    {
+                        JsonEditor.Text = _tab.JsonText;
+                    }
+                    finally
+                    {
+                        _isInitializing = false;
+                    }
 
                     if (_textChangedHandler != null)
                         JsonEditor.TextChanged += _textChangedHandler;
@@ -89,15 +115,21 @@ namespace JsonFormatterApp.Views
             JsonEditor.TextChanged += _textChangedHandler;
             _tab.PropertyChanged += _propertyChangedHandler;
 
-            System.Diagnostics.Debug.WriteLine($"[TabContent Loaded] Handlers attached for tab {_tab.Header}");
+            System.Diagnostics.Debug.WriteLine($"[TabContent Init] Handlers attached for tab {_tab.Header}");
         }
 
         private void TabContentControl_Unloaded(object sender, RoutedEventArgs e)
         {
+            System.Diagnostics.Debug.WriteLine($"[TabContent Unloaded] Tab: {_tab?.Header}, EditorHashCode: {JsonEditor.GetHashCode()}");
+            Cleanup();
+        }
+
+        private void Cleanup()
+        {
             if (_tab == null)
                 return;
 
-            System.Diagnostics.Debug.WriteLine($"[TabContent Unloaded] Tab: {_tab.Header}, TabId: {_tab.Id}, EditorHashCode: {JsonEditor.GetHashCode()}");
+            System.Diagnostics.Debug.WriteLine($"[TabContent Cleanup] Tab: {_tab.Header}");
 
             // Remove event handlers
             if (_textChangedHandler != null)
@@ -106,7 +138,7 @@ namespace JsonFormatterApp.Views
                 _textChangedHandler = null;
             }
 
-            if (_propertyChangedHandler != null && _tab != null)
+            if (_propertyChangedHandler != null)
             {
                 _tab.PropertyChanged -= _propertyChangedHandler;
                 _propertyChangedHandler = null;
@@ -115,7 +147,8 @@ namespace JsonFormatterApp.Views
             // Clear editor content
             JsonEditor.Document.Text = string.Empty;
 
-            System.Diagnostics.Debug.WriteLine($"[TabContent Unloaded] Cleanup completed for tab {_tab.Header}");
+            _tab = null;
+            _viewModel = null;
         }
     }
 }
