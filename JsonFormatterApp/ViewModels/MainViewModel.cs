@@ -184,10 +184,14 @@ namespace JsonFormatterApp.ViewModels
                 try
                 {
                     var content = _fileService.ReadFile(dialog.FileName);
-                    var newTab = new TabItem();
-
-                    // Use InitializeContent to avoid marking as dirty when loading file
-                    newTab.InitializeContent(content, dialog.FileName);
+                    var newTab = new TabItem
+                    {
+                        FilePath = dialog.FileName
+                    };
+                    
+                    // Set content without marking as dirty
+                    newTab.SetJsonTextWithoutDirty(content);
+                    newTab.IsDirty = false;
 
                     Tabs.Add(newTab);
                     SelectedTab = newTab;
@@ -791,10 +795,14 @@ namespace JsonFormatterApp.ViewModels
             try
             {
                 var content = _fileService.ReadFile(filePath);
-                var newTab = new TabItem();
-
-                // Use InitializeContent to avoid marking as dirty when loading file
-                newTab.InitializeContent(content, filePath);
+                var newTab = new TabItem
+                {
+                    FilePath = filePath
+                };
+                
+                // Set content without marking as dirty
+                newTab.SetJsonTextWithoutDirty(content);
+                newTab.IsDirty = false;
 
                 Tabs.Add(newTab);
                 SelectedTab = newTab;

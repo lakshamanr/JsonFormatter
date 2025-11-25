@@ -15,7 +15,7 @@ namespace JsonFormatterApp.Models
         private ObservableCollection<JsonTreeNode> _treeNodes = new();
         private System.Data.DataTable? _tableData;
         private string _statusMessage = "Ready";
-        private bool _suppressDirtyFlag = false;
+        private bool _isInitializing = false;
 
         public string Header
         {
@@ -30,34 +30,12 @@ namespace JsonFormatterApp.Models
             {
                 if (SetProperty(ref _jsonText, value))
                 {
-                    // Only mark as dirty if not suppressed
-                    if (!_suppressDirtyFlag)
+                    // Only mark as dirty if not during initialization
+                    if (!_isInitializing)
                     {
                         IsDirty = true;
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// Initialize JsonText without marking the tab as dirty.
-        /// Use this when loading a file or setting initial content.
-        /// </summary>
-        public void InitializeContent(string jsonText, string? filePath = null)
-        {
-            _suppressDirtyFlag = true;
-            try
-            {
-                JsonText = jsonText;
-                if (filePath != null)
-                {
-                    FilePath = filePath;
-                }
-                IsDirty = false;
-            }
-            finally
-            {
-                _suppressDirtyFlag = false;
             }
         }
 
@@ -110,6 +88,22 @@ namespace JsonFormatterApp.Models
         }
 
         public Guid Id { get; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Set JSON text without marking the tab as dirty (for initial load)
+        /// </summary>
+        public void SetJsonTextWithoutDirty(string jsonText)
+        {
+            _isInitializing = true;
+            try
+            {
+                JsonText = jsonText;
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
+        }
 
         private void UpdateHeader()
         {
