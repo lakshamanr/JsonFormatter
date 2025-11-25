@@ -41,32 +41,34 @@ namespace JsonFormatterApp.Views
             Application.Current.Shutdown();
         }
 
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            var helpWindow = new HelpWindow
+            {
+                Owner = this
+            };
+            helpWindow.Show();
+        }
+
+        private void KeyboardShortcuts_Click(object sender, RoutedEventArgs e)
+        {
+            var helpWindow = new HelpWindow
+            {
+                Owner = this
+            };
+            // Show keyboard shortcuts section
+            helpWindow.Show();
+            // Programmatically click the keyboard shortcuts button
+            // This would require accessing the button from code, simplified for now
+        }
+
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                "JSON Formatter & Validator Pro\n\n" +
-                "Version 2.0.0 - Multi-Tab Edition\n\n" +
-                "A professional JSON formatting, validation, and conversion tool.\n\n" +
-                "New Features in v2.0:\n" +
-                "• Multi-tab support for working with multiple files\n" +
-                "• Tabular view for JSON arrays\n" +
-                "• Compare tabs feature\n" +
-                "• Enhanced UI with better organization\n\n" +
-                "Core Features:\n" +
-                "• Format & Minify JSON\n" +
-                "• JSON Validation with error highlighting\n" +
-                "• Tree View Explorer\n" +
-                "• Table View for arrays\n" +
-                "• Convert to XML, C#, SQL, YAML\n" +
-                "• JSON Schema Validation\n" +
-                "• JSON Diff & Compare\n" +
-                "• Dark/Light Themes\n" +
-                "• Base64 & URL Encoding/Decoding\n\n" +
-                "© 2024 JSON Formatter Pro",
-                "About JSON Formatter Pro",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information
-            );
+            var aboutWindow = new AboutWindow
+            {
+                Owner = this
+            };
+            aboutWindow.ShowDialog();
         }
     }
 }

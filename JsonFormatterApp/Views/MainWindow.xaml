@@ -7,7 +7,7 @@
         xmlns:converters="clr-namespace:JsonFormatterApp.Converters"
         xmlns:views="clr-namespace:JsonFormatterApp.Views"
         mc:Ignorable="d"
-        Title="JSON Formatter &amp; Validator Pro - Multi-Tab Edition"
+        Title="JSON Formatter Pro - Professional Edition v2.0"
         Height="800" Width="1600"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BackgroundBrush}">
@@ -91,7 +91,10 @@
             </MenuItem>
 
             <MenuItem Header="_Help" Foreground="{DynamicResource ForegroundBrush}">
-                <MenuItem Header="_About" Click="About_Click"/>
+                <MenuItem Header="_Help &amp; Documentation" Click="Help_Click" InputGestureText="F1"/>
+                <MenuItem Header="_Keyboard Shortcuts" Click="KeyboardShortcuts_Click" InputGestureText="Shift+F1"/>
+                <Separator/>
+                <MenuItem Header="_About JSON Formatter Pro" Click="About_Click"/>
             </MenuItem>
         </Menu>
 

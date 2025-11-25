@@ -1,0 +1,190 @@
+<Window x:Class="JsonFormatterApp.Views.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About JSON Formatter Pro"
+        Height="600" Width="550"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize"
+        Background="{DynamicResource BackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Section with Logo -->
+        <Border Grid.Row="0" Background="{DynamicResource AccentBrush}" Padding="30">
+            <StackPanel HorizontalAlignment="Center">
+                <!-- Product Logo/Icon -->
+                <TextBlock Text="📊" FontSize="72" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+                <TextBlock Text="JSON Formatter Pro"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="Professional JSON Editing Suite"
+                           FontSize="14"
+                           Foreground="White"
+                           Opacity="0.9"
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,0"/>
+
+                <TextBlock x:Name="VersionText"
+                           Text="Version 2.0.0 Professional"
+                           FontSize="12"
+                           Foreground="White"
+                           Opacity="0.8"
+                           HorizontalAlignment="Center"
+                           Margin="0,10,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content Section -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,20">
+            <StackPanel>
+                <!-- Product Description -->
+                <TextBlock Text="Product Information"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Margin="0,0,0,10"/>
+
+                <TextBlock TextWrapping="Wrap"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Opacity="0.8"
+                           Margin="0,0,0,20">
+                    <Run Text="JSON Formatter Pro is a professional-grade JSON editing and validation tool designed for developers, data analysts, and IT professionals. With advanced features and an intuitive interface, it streamlines your JSON workflow."/>
+                </TextBlock>
+
+                <!-- Key Features -->
+                <TextBlock Text="Key Features"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Margin="0,0,0,10"/>
+
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Text="✓ Multi-tab interface for simultaneous file editing"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Real-time JSON validation with error detection"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Tree view for hierarchical JSON exploration"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Table view for JSON array visualization"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Format conversion (XML, C#, SQL, YAML)"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ JSON Schema validation"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Diff and compare functionality"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Dark and Light professional themes"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Base64 and URL encoding/decoding"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                    <TextBlock Text="✓ Large file support (up to 50MB)"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,3"/>
+                </StackPanel>
+
+                <!-- Copyright & License -->
+                <TextBlock Text="License Information"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Margin="0,0,0,10"/>
+
+                <TextBlock TextWrapping="Wrap"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Opacity="0.8"
+                           Margin="0,0,0,10">
+                    <Run Text="© 2024 JSON Formatter Pro. All rights reserved."/>
+                    <LineBreak/>
+                    <LineBreak/>
+                    <Run Text="This software is licensed for commercial use. Unauthorized copying, distribution, or modification is prohibited."/>
+                    <LineBreak/>
+                    <LineBreak/>
+                    <Run Text="License Type: Professional Edition"/>
+                    <LineBreak/>
+                    <Run Text="Licensed To: Professional User"/>
+                </TextBlock>
+
+                <!-- Third-Party Components -->
+                <TextBlock Text="Third-Party Components"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Margin="0,10,0,10"/>
+
+                <TextBlock TextWrapping="Wrap"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Opacity="0.8"
+                           Margin="0,0,0,10"
+                           FontSize="11">
+                    <Run Text="• AvalonEdit - Text editor component (MIT License)"/>
+                    <LineBreak/>
+                    <Run Text="• Newtonsoft.Json - JSON framework (MIT License)"/>
+                    <LineBreak/>
+                    <Run Text="• NJsonSchema - Schema validation (MIT License)"/>
+                    <LineBreak/>
+                    <Run Text="• YamlDotNet - YAML processing (MIT License)"/>
+                    <LineBreak/>
+                    <Run Text="• DiffPlex - Diff algorithm (Apache 2.0)"/>
+                </TextBlock>
+
+                <!-- Support Information -->
+                <TextBlock Text="Support & Contact"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Margin="0,10,0,10"/>
+
+                <StackPanel>
+                    <TextBlock Foreground="{DynamicResource ForegroundBrush}" Margin="0,3">
+                        <Run Text="Email: support@jsonformatterpro.com"/>
+                    </TextBlock>
+                    <TextBlock Foreground="{DynamicResource ForegroundBrush}" Margin="0,3">
+                        <Run Text="Website: www.jsonformatterpro.com"/>
+                    </TextBlock>
+                    <TextBlock Foreground="{DynamicResource ForegroundBrush}" Margin="0,3">
+                        <Run Text="Documentation: docs.jsonformatterpro.com"/>
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer with Close Button -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource PanelHeaderBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="30,15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="System Information"
+                        MinWidth="130"
+                        Padding="15,8"
+                        Margin="0,0,10,0"
+                        Click="SystemInfo_Click"/>
+                <Button Content="Close"
+                        MinWidth="100"
+                        Padding="15,8"
+                        IsDefault="True"
+                        Click="Close_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
