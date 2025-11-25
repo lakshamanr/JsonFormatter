@@ -159,7 +159,7 @@ namespace JsonFormatterApp.Views
                 Text = text,
                 FontSize = 24,
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush((Color)FindResource("ForegroundBrush")),
+                Foreground = FindResource("ForegroundBrush") as SolidColorBrush,
                 Margin = new Thickness(0, 0, 0, 20)
             };
             ContentPanel.Children.Add(tb);
@@ -172,7 +172,7 @@ namespace JsonFormatterApp.Views
                 Text = text,
                 FontSize = 16,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = new SolidColorBrush((Color)FindResource("ForegroundBrush")),
+                Foreground = FindResource("ForegroundBrush") as SolidColorBrush,
                 Margin = new Thickness(0, 15, 0, 10)
             };
             ContentPanel.Children.Add(tb);
@@ -185,7 +185,7 @@ namespace JsonFormatterApp.Views
                 Text = text,
                 FontSize = 13,
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = new SolidColorBrush((Color)FindResource("ForegroundBrush")),
+                Foreground = FindResource("ForegroundBrush") as SolidColorBrush,
                 Opacity = 0.9,
                 Margin = new Thickness(0, 5, 0, 10)
             };
@@ -199,7 +199,7 @@ namespace JsonFormatterApp.Views
                 Text = "• " + text,
                 FontSize = 13,
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = new SolidColorBrush((Color)FindResource("ForegroundBrush")),
+                Foreground = FindResource("ForegroundBrush") as SolidColorBrush,
                 Opacity = 0.9,
                 Margin = new Thickness(20, 3, 0, 3)
             };
@@ -216,8 +216,8 @@ namespace JsonFormatterApp.Views
 
             var keyBorder = new Border
             {
-                Background = new SolidColorBrush((Color)FindResource("PanelHeaderBrush")),
-                BorderBrush = new SolidColorBrush((Color)FindResource("BorderBrush")),
+                Background = FindResource("PanelHeaderBrush") as SolidColorBrush,
+                BorderBrush = FindResource("BorderBrush") as SolidColorBrush,
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(3),
                 Padding = new Thickness(8, 4),
@@ -229,7 +229,7 @@ namespace JsonFormatterApp.Views
                 Text = keys,
                 FontFamily = new FontFamily("Consolas"),
                 FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush((Color)FindResource("ForegroundBrush")),
+                Foreground = FindResource("ForegroundBrush") as SolidColorBrush,
                 MinWidth = 100
             };
 
@@ -240,7 +240,7 @@ namespace JsonFormatterApp.Views
             {
                 Text = description,
                 FontSize = 13,
-                Foreground = new SolidColorBrush((Color)FindResource("ForegroundBrush")),
+                Foreground = FindResource("ForegroundBrush") as SolidColorBrush,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
@@ -253,7 +253,7 @@ namespace JsonFormatterApp.Views
             var border = new Border
             {
                 Background = new SolidColorBrush(Color.FromArgb(40, 0, 122, 204)),
-                BorderBrush = new SolidColorBrush((Color)FindResource("AccentBrush")),
+                BorderBrush = FindResource("AccentBrush") as SolidColorBrush,
                 BorderThickness = new Thickness(1, 1, 1, 1),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(15, 10),
@@ -265,7 +265,7 @@ namespace JsonFormatterApp.Views
                 Text = text,
                 FontSize = 12,
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = new SolidColorBrush((Color)FindResource("ForegroundBrush"))
+                Foreground = FindResource("ForegroundBrush") as SolidColorBrush
             };
 
             border.Child = tb;
