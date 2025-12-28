@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Linq;
 using JsonFormatterApp.Helpers;
 
 namespace JsonFormatterApp.Models
@@ -58,18 +60,41 @@ namespace JsonFormatterApp.Models
             }
             else
             {
-                var filters = new List<string>();
-                foreach (DataColumn column in Data.Columns)
-                {
-                    if (column.DataType == typeof(string))
-                    {
-                        filters.Add($"[{column.ColumnName}] LIKE '%{SearchText.Replace("'", "''")}%'");
-                    }
-                }
+                // Parse multiple search terms (separated by space or comma)
+                var searchTerms = SearchText
+                    .Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim().Replace("'", "''"))
+                    .Where(t => !string.IsNullOrEmpty(t))
+                    .ToList();
 
-                if (filters.Count > 0)
+                if (searchTerms.Count > 0)
                 {
-                    dataView.RowFilter = string.Join(" OR ", filters);
+                    // Build filter: Each search term must match at least one column (AND logic - acts as filters)
+                    var termFilters = new List<string>();
+
+                    foreach (var term in searchTerms)
+                    {
+                        var columnFilters = new List<string>();
+                        foreach (DataColumn column in Data.Columns)
+                        {
+                            if (column.DataType == typeof(string))
+                            {
+                                columnFilters.Add($"[{column.ColumnName}] LIKE '%{term}%'");
+                            }
+                        }
+
+                        if (columnFilters.Count > 0)
+                        {
+                            // Each term should match at least one column
+                            termFilters.Add($"({string.Join(" OR ", columnFilters)})");
+                        }
+                    }
+
+                    if (termFilters.Count > 0)
+                    {
+                        // Combine all term filters with AND (row must match ALL search terms - acts as filters)
+                        dataView.RowFilter = string.Join(" AND ", termFilters);
+                    }
                 }
             }
 

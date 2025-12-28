@@ -125,9 +125,9 @@
         <!-- Main Editor Content -->
         <Grid Grid.Row="2" DataContext="{Binding Document}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Left Panel: Text Editor -->
@@ -253,9 +253,9 @@
                             <!-- Search Toolbar -->
                             <Border Grid.Row="0" Background="{DynamicResource ToolbarBackgroundBrush}" Padding="10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🔍 Search:" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,5,0"/>
-                                    <TextBox Width="250" Text="{Binding TreeSearchText, UpdateSourceTrigger=PropertyChanged}" Background="{DynamicResource EditorBackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" Padding="5" VerticalAlignment="Center" ToolTip="Search by key or value"/>
-                                    <TextBlock Foreground="{DynamicResource ForegroundBrush}" Margin="15,0,0,0" VerticalAlignment="Center" FontStyle="Italic" Text="Search filters keys and values in real-time"/>
+                                    <TextBlock Text="🔍 Filter:" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,5,0"/>
+                                    <TextBox Width="300" Text="{Binding TreeSearchText, UpdateSourceTrigger=PropertyChanged}" Background="{DynamicResource EditorBackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" Padding="5" VerticalAlignment="Center" ToolTip="Filter by key or value. Add multiple terms to narrow results (e.g., 'postcode 2150' shows only nodes with both terms)"/>
+                                    <TextBlock Foreground="{DynamicResource ForegroundBrush}" Margin="15,0,0,0" VerticalAlignment="Center" FontStyle="Italic" Text="Multiple terms act as filters (all terms must match)"/>
                                 </StackPanel>
                             </Border>
 
@@ -362,8 +362,8 @@
 
                                     <!-- Search Box -->
                                     <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,10,0">
-                                        <TextBlock Text="🔍 Search:" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,5,0"/>
-                                        <TextBox Width="200" Text="{Binding SelectedTable.SearchText, UpdateSourceTrigger=PropertyChanged}" Background="{DynamicResource EditorBackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" Padding="5" VerticalAlignment="Center"/>
+                                        <TextBlock Text="🔍 Filter:" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,5,0"/>
+                                        <TextBox Width="250" Text="{Binding SelectedTable.SearchText, UpdateSourceTrigger=PropertyChanged}" Background="{DynamicResource EditorBackgroundBrush}" Foreground="{DynamicResource ForegroundBrush}" Padding="5" VerticalAlignment="Center" ToolTip="Filter rows by content. Add multiple terms to narrow results (e.g., 'NSW 2150' shows only rows containing both terms in any column)"/>
                                     </StackPanel>
 
                                     <!-- Table Stats -->

@@ -1,7 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using JsonFormatterApp.Helpers;
 using JsonFormatterApp.Models;
-using System.Collections.Generic;
 
 namespace JsonFormatterApp.Models
 {
@@ -155,11 +157,18 @@ namespace JsonFormatterApp.Models
             }
             else
             {
+                // Parse multiple search terms (separated by space or comma)
+                var searchTerms = TreeSearchText.ToLower()
+                    .Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim())
+                    .Where(t => !string.IsNullOrEmpty(t))
+                    .ToList();
+
                 // Filter tree nodes
                 var filtered = new ObservableCollection<JsonTreeNode>();
                 foreach (var node in TreeNodes)
                 {
-                    var filteredNode = FilterTreeNode(node, TreeSearchText.ToLower());
+                    var filteredNode = FilterTreeNode(node, searchTerms);
                     if (filteredNode != null)
                     {
                         filtered.Add(filteredNode);
@@ -169,11 +178,12 @@ namespace JsonFormatterApp.Models
             }
         }
 
-        private JsonTreeNode? FilterTreeNode(JsonTreeNode node, string searchText)
+        private JsonTreeNode? FilterTreeNode(JsonTreeNode node, List<string> searchTerms)
         {
-            // Check if current node matches
-            bool nodeMatches = node.Key.ToLower().Contains(searchText) ||
-                              (node.Value?.ToLower().Contains(searchText) ?? false);
+            // Check if current node matches ALL search terms (AND logic - acts as filters)
+            bool nodeMatches = searchTerms.All(term =>
+                node.Key.ToLower().Contains(term) ||
+                (node.Value?.ToLower().Contains(term) ?? false));
 
             // Filter children recursively
             var filteredChildren = new ObservableCollection<JsonTreeNode>();
@@ -181,7 +191,7 @@ namespace JsonFormatterApp.Models
             {
                 foreach (var child in node.Children)
                 {
-                    var filteredChild = FilterTreeNode(child, searchText);
+                    var filteredChild = FilterTreeNode(child, searchTerms);
                     if (filteredChild != null)
                     {
                         filteredChildren.Add(filteredChild);
