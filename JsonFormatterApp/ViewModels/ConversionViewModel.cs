@@ -15,28 +15,19 @@ namespace JsonFormatterApp.ViewModels
     {
         private readonly IEventAggregator _eventAggregator;
         private readonly ConversionService _conversionService;
-        private readonly TabManagerViewModel _tabManager;
+        private readonly DocumentModel _document;
 
         public ConversionViewModel(
             IEventAggregator eventAggregator,
             ConversionService conversionService,
-            TabManagerViewModel tabManager)
+            DocumentModel document)
         {
             _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _conversionService = conversionService ?? throw new ArgumentNullException(nameof(conversionService));
-            _tabManager = tabManager ?? throw new ArgumentNullException(nameof(tabManager));
+            _document = document ?? throw new ArgumentNullException(nameof(document));
 
             InitializeCommands();
-
-            // Subscribe to events
-            _eventAggregator.Subscribe<TabSelectedMessage>(OnTabSelected);
         }
-
-        #region Properties
-
-        private TabItem? CurrentTab => _tabManager.SelectedTab;
-
-        #endregion
 
         #region Commands
 
@@ -49,32 +40,19 @@ namespace JsonFormatterApp.ViewModels
 
         private void InitializeCommands()
         {
-            ConvertToXmlCommand = new RelayCommand(_ => ConvertToXml(), _ => CurrentTab != null);
-            ConvertToCSharpCommand = new RelayCommand(_ => ConvertToCSharp(), _ => CurrentTab != null);
-            ConvertToSqlCommand = new RelayCommand(_ => ConvertToSql(), _ => CurrentTab != null);
-            ConvertToYamlCommand = new RelayCommand(_ => ConvertToYaml(), _ => CurrentTab != null);
+            ConvertToXmlCommand = new RelayCommand(_ => ConvertToXml());
+            ConvertToCSharpCommand = new RelayCommand(_ => ConvertToCSharp());
+            ConvertToSqlCommand = new RelayCommand(_ => ConvertToSql());
+            ConvertToYamlCommand = new RelayCommand(_ => ConvertToYaml());
         }
-
-        #region Event Handlers
-
-        private void OnTabSelected(TabSelectedMessage message)
-        {
-            // Refresh command can execute states
-            CommandManager.InvalidateRequerySuggested();
-        }
-
-        #endregion
 
         #region Conversion Operations
 
         private void ConvertToXml()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var xml = _conversionService.JsonToXml(CurrentTab.JsonText);
+                var xml = _conversionService.JsonToXml(_document.JsonText);
                 ShowConversionResult("XML", xml);
             }
             catch (Exception ex)
@@ -85,12 +63,9 @@ namespace JsonFormatterApp.ViewModels
 
         private void ConvertToCSharp()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var csharp = _conversionService.JsonToCSharpClasses(CurrentTab.JsonText);
+                var csharp = _conversionService.JsonToCSharpClasses(_document.JsonText);
                 ShowConversionResult("C# Classes", csharp);
             }
             catch (Exception ex)
@@ -101,12 +76,9 @@ namespace JsonFormatterApp.ViewModels
 
         private void ConvertToSql()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var sql = _conversionService.JsonToSql(CurrentTab.JsonText);
+                var sql = _conversionService.JsonToSql(_document.JsonText);
                 ShowConversionResult("SQL", sql);
             }
             catch (Exception ex)
@@ -117,12 +89,9 @@ namespace JsonFormatterApp.ViewModels
 
         private void ConvertToYaml()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var yaml = _conversionService.JsonToYaml(CurrentTab.JsonText);
+                var yaml = _conversionService.JsonToYaml(_document.JsonText);
                 ShowConversionResult("YAML", yaml);
             }
             catch (Exception ex)

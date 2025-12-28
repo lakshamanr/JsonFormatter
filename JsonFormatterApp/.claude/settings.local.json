@@ -5,7 +5,8 @@
       "Bash(taskkill:*)",
       "Bash(dotnet new:*)",
       "Bash(dotnet add:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(del /F ModelsTabItem.cs ViewModelsTabManagerViewModel.cs ViewsTabContentControl.xaml ViewsTabContentControl.xaml.cs)"
     ]
   }
 }

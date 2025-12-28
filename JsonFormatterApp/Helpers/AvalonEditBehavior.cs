@@ -2,7 +2,6 @@ using System;
 using System.Windows;
 using System.Windows.Data;
 using ICSharpCode.AvalonEdit;
-using JsonFormatterApp.Models;
 
 namespace JsonFormatterApp.Helpers
 {
@@ -76,25 +75,11 @@ namespace JsonFormatterApp.Helpers
                 {
                     if (sender is TextEditor textEditor)
                     {
-                        // Direct approach: Get the TabItem from DataContext and update JsonText directly
-                        // This is more reliable than trying to work through the binding system
-                        if (textEditor.DataContext is TabItem tabItem)
+                        var bindingExpression = BindingOperations.GetBindingExpression(textEditor, BindableTextProperty);
+                        if (bindingExpression != null)
                         {
-                            // Only update if the value is actually different to avoid infinite loops
-                            if (tabItem.JsonText != textEditor.Text)
-                            {
-                                tabItem.JsonText = textEditor.Text;
-                            }
-                        }
-                        else
-                        {
-                            // Fallback: Try using the binding expression
-                            var bindingExpression = BindingOperations.GetBindingExpression(textEditor, BindableTextProperty);
-                            if (bindingExpression != null)
-                            {
-                                textEditor.SetCurrentValue(BindableTextProperty, textEditor.Text);
-                                bindingExpression.UpdateSource();
-                            }
+                            textEditor.SetCurrentValue(BindableTextProperty, textEditor.Text);
+                            bindingExpression.UpdateSource();
                         }
                     }
                 };

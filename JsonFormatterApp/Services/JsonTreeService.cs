@@ -33,6 +33,7 @@ namespace JsonFormatterApp.Services
                     node.Type = "Object";
                     node.Value = $"{{ {((JObject)token).Count} properties }}";
                     node.Children = new ObservableCollection<JsonTreeNode>();
+                    node.IsExpanded = true;
 
                     foreach (var property in ((JObject)token).Properties())
                     {
@@ -44,6 +45,7 @@ namespace JsonFormatterApp.Services
                     node.Type = "Array";
                     node.Value = $"[ {((JArray)token).Count} items ]";
                     node.Children = new ObservableCollection<JsonTreeNode>();
+                    node.IsExpanded = true;
 
                     int index = 0;
                     foreach (var item in (JArray)token)

@@ -1,6 +1,4 @@
-using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using JsonFormatterApp.ViewModels;
 
 namespace JsonFormatterApp.Views
@@ -18,23 +16,19 @@ namespace JsonFormatterApp.Views
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            // Check for unsaved changes in all tabs
-            foreach (var tab in _viewModel.Tabs)
+            // Check for unsaved changes
+            if (_viewModel.Document.IsDirty)
             {
-                if (tab.IsDirty)
-                {
-                    var result = MessageBox.Show(
-                        "You have unsaved changes in one or more tabs. Do you want to exit anyway?",
-                        "Unsaved Changes",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Warning
-                    );
+                var result = MessageBox.Show(
+                    "You have unsaved changes. Do you want to exit anyway?",
+                    "Unsaved Changes",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning
+                );
 
-                    if (result == MessageBoxResult.No)
-                    {
-                        return;
-                    }
-                    break;
+                if (result == MessageBoxResult.No)
+                {
+                    return;
                 }
             }
 
@@ -45,14 +39,9 @@ namespace JsonFormatterApp.Views
         {
             MessageBox.Show(
                 "JSON Formatter & Validator Pro\n\n" +
-                "Version 2.0.0 - Multi-Tab Edition\n\n" +
+                "Version 2.0\n\n" +
                 "A professional JSON formatting, validation, and conversion tool.\n\n" +
-                "New Features in v2.0:\n" +
-                "• Multi-tab support for working with multiple files\n" +
-                "• Tabular view for JSON arrays\n" +
-                "• Compare tabs feature\n" +
-                "• Enhanced UI with better organization\n\n" +
-                "Core Features:\n" +
+                "Features:\n" +
                 "• Format & Minify JSON\n" +
                 "• JSON Validation with error highlighting\n" +
                 "• Tree View Explorer\n" +

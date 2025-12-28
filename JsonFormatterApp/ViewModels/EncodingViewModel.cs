@@ -15,31 +15,22 @@ namespace JsonFormatterApp.ViewModels
     {
         private readonly IEventAggregator _eventAggregator;
         private readonly EncodingService _encodingService;
-        private readonly TabManagerViewModel _tabManager;
+        private readonly DocumentModel _document;
         private readonly JsonOperationsViewModel _jsonOperations;
 
         public EncodingViewModel(
             IEventAggregator eventAggregator,
             EncodingService encodingService,
-            TabManagerViewModel tabManager,
+            DocumentModel document,
             JsonOperationsViewModel jsonOperations)
         {
             _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _encodingService = encodingService ?? throw new ArgumentNullException(nameof(encodingService));
-            _tabManager = tabManager ?? throw new ArgumentNullException(nameof(tabManager));
+            _document = document ?? throw new ArgumentNullException(nameof(document));
             _jsonOperations = jsonOperations ?? throw new ArgumentNullException(nameof(jsonOperations));
 
             InitializeCommands();
-
-            // Subscribe to events
-            _eventAggregator.Subscribe<TabSelectedMessage>(OnTabSelected);
         }
-
-        #region Properties
-
-        private TabItem? CurrentTab => _tabManager.SelectedTab;
-
-        #endregion
 
         #region Commands
 
@@ -52,32 +43,19 @@ namespace JsonFormatterApp.ViewModels
 
         private void InitializeCommands()
         {
-            Base64EncodeCommand = new RelayCommand(_ => Base64Encode(), _ => CurrentTab != null);
-            Base64DecodeCommand = new RelayCommand(_ => Base64Decode(), _ => CurrentTab != null);
-            UrlEncodeCommand = new RelayCommand(_ => UrlEncode(), _ => CurrentTab != null);
-            UrlDecodeCommand = new RelayCommand(_ => UrlDecode(), _ => CurrentTab != null);
+            Base64EncodeCommand = new RelayCommand(_ => Base64Encode());
+            Base64DecodeCommand = new RelayCommand(_ => Base64Decode());
+            UrlEncodeCommand = new RelayCommand(_ => UrlEncode());
+            UrlDecodeCommand = new RelayCommand(_ => UrlDecode());
         }
-
-        #region Event Handlers
-
-        private void OnTabSelected(TabSelectedMessage message)
-        {
-            // Refresh command can execute states
-            CommandManager.InvalidateRequerySuggested();
-        }
-
-        #endregion
 
         #region Encoding Operations
 
         private void Base64Encode()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var encoded = _encodingService.EncodeBase64(CurrentTab.JsonText);
+                var encoded = _encodingService.EncodeBase64(_document.JsonText);
                 ShowConversionResult("Base64 Encoded", encoded);
             }
             catch (Exception ex)
@@ -88,13 +66,10 @@ namespace JsonFormatterApp.ViewModels
 
         private void Base64Decode()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var decoded = _encodingService.DecodeBase64(CurrentTab.JsonText);
-                CurrentTab.JsonText = decoded;
+                var decoded = _encodingService.DecodeBase64(_document.JsonText);
+                _document.JsonText = decoded;
                 UpdateStatus("Base64 decoded");
                 _jsonOperations.ValidateJson();
                 _jsonOperations.BuildTree();
@@ -108,12 +83,9 @@ namespace JsonFormatterApp.ViewModels
 
         private void UrlEncode()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var encoded = _encodingService.UrlEncode(CurrentTab.JsonText);
+                var encoded = _encodingService.UrlEncode(_document.JsonText);
                 ShowConversionResult("URL Encoded", encoded);
             }
             catch (Exception ex)
@@ -124,13 +96,10 @@ namespace JsonFormatterApp.ViewModels
 
         private void UrlDecode()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                var decoded = _encodingService.UrlDecode(CurrentTab.JsonText);
-                CurrentTab.JsonText = decoded;
+                var decoded = _encodingService.UrlDecode(_document.JsonText);
+                _document.JsonText = decoded;
                 UpdateStatus("URL decoded");
                 _jsonOperations.ValidateJson();
                 _jsonOperations.BuildTree();
@@ -173,11 +142,7 @@ namespace JsonFormatterApp.ViewModels
 
         private void UpdateStatus(string message)
         {
-            if (CurrentTab != null)
-            {
-                CurrentTab.StatusMessage = message;
-            }
-
+            _document.StatusMessage = message;
             _eventAggregator.Publish(new StatusUpdateMessage { Message = message });
         }
 

@@ -17,23 +17,20 @@ namespace JsonFormatterApp.ViewModels
     {
         private readonly IEventAggregator _eventAggregator;
         private readonly FileService _fileService;
-        private readonly TabManagerViewModel _tabManager;
+        private readonly DocumentModel _document;
         private ObservableCollection<RecentFile> _recentFiles = new();
 
         public FileOperationsViewModel(
             IEventAggregator eventAggregator,
             FileService fileService,
-            TabManagerViewModel tabManager)
+            DocumentModel document)
         {
             _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-            _tabManager = tabManager ?? throw new ArgumentNullException(nameof(tabManager));
+            _document = document ?? throw new ArgumentNullException(nameof(document));
 
             InitializeCommands();
             LoadRecentFiles();
-
-            // Subscribe to tab selection changes
-            _eventAggregator.Subscribe<TabSelectedMessage>(OnTabSelected);
         }
 
         #region Properties
@@ -44,12 +41,11 @@ namespace JsonFormatterApp.ViewModels
             set => SetProperty(ref _recentFiles, value);
         }
 
-        private TabItem? CurrentTab => _tabManager.SelectedTab;
-
         #endregion
 
         #region Commands
 
+        public ICommand NewFileCommand { get; private set; } = null!;
         public ICommand OpenFileCommand { get; private set; } = null!;
         public ICommand SaveFileCommand { get; private set; } = null!;
         public ICommand SaveAsCommand { get; private set; } = null!;
@@ -60,32 +56,81 @@ namespace JsonFormatterApp.ViewModels
 
         private void InitializeCommands()
         {
+            NewFileCommand = new RelayCommand(_ => NewFile(), _ => CanCreateNew());
             OpenFileCommand = new RelayCommand(_ => OpenFile());
             SaveFileCommand = new RelayCommand(_ => SaveFile(), _ => CanSave());
-            SaveAsCommand = new RelayCommand(_ => SaveFileAs(), _ => CurrentTab != null);
+            SaveAsCommand = new RelayCommand(_ => SaveFileAs());
             OpenRecentFileCommand = new RelayCommand(param => OpenRecentFile(param as string));
             ClearRecentFilesCommand = new RelayCommand(_ => ClearRecentFiles());
         }
 
-        #region Event Handlers
-
-        private void OnTabSelected(TabSelectedMessage message)
-        {
-            // Refresh command can execute states
-            CommandManager.InvalidateRequerySuggested();
-        }
-
-        #endregion
-
         #region File Operations
+
+        private bool CanCreateNew()
+        {
+            // Allow creating new file if there are unsaved changes
+            return _document.IsDirty;
+        }
 
         private bool CanSave()
         {
-            return CurrentTab != null && !string.IsNullOrEmpty(CurrentTab.FilePath);
+            return !string.IsNullOrEmpty(_document.FilePath);
+        }
+
+        public void NewFile()
+        {
+            // Check for unsaved changes
+            if (_document.IsDirty)
+            {
+                var result = MessageBox.Show(
+                    "Do you want to save changes to the current document?",
+                    "Unsaved Changes",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SaveFile();
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
+            }
+
+            // Clear the document
+            _document.SetJsonTextWithoutDirty(string.Empty);
+            _document.FilePath = string.Empty;
+            _document.IsDirty = false;
+            _document.TreeNodes.Clear();
+            _document.TableData = null;
+            UpdateStatus("New document created");
+
+            // Notify that views should be refreshed
+            _eventAggregator.Publish(new RefreshViewsMessage());
         }
 
         public void OpenFile()
         {
+            // Check for unsaved changes
+            if (_document.IsDirty)
+            {
+                var result = MessageBox.Show(
+                    "Do you want to save changes to the current document?",
+                    "Unsaved Changes",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SaveFile();
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
+            }
+
             var dialog = new OpenFileDialog
             {
                 Filter = "JSON Files (*.json)|*.json|Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
@@ -97,11 +142,14 @@ namespace JsonFormatterApp.ViewModels
                 try
                 {
                     var content = _fileService.ReadFile(dialog.FileName);
-                    var newTab = _tabManager.CreateTab(content, dialog.FileName);
+                    _document.SetJsonTextWithoutDirty(content);
+                    _document.FilePath = dialog.FileName;
+                    _document.IsDirty = false;
 
                     // Notify that views should be refreshed
-                    _eventAggregator.Publish(new RefreshViewsMessage { Tab = newTab });
+                    _eventAggregator.Publish(new RefreshViewsMessage());
 
+                    UpdateStatus($"Opened: {dialog.FileName}");
                     LoadRecentFiles();
                 }
                 catch (Exception ex)
@@ -113,10 +161,7 @@ namespace JsonFormatterApp.ViewModels
 
         public void SaveFile()
         {
-            if (CurrentTab == null)
-                return;
-
-            if (string.IsNullOrEmpty(CurrentTab.FilePath))
+            if (string.IsNullOrEmpty(_document.FilePath))
             {
                 SaveFileAs();
                 return;
@@ -124,9 +169,9 @@ namespace JsonFormatterApp.ViewModels
 
             try
             {
-                _fileService.WriteFile(CurrentTab.FilePath, CurrentTab.JsonText);
-                CurrentTab.IsDirty = false;
-                UpdateStatus($"Saved: {CurrentTab.FilePath}");
+                _fileService.WriteFile(_document.FilePath, _document.JsonText);
+                _document.IsDirty = false;
+                UpdateStatus($"Saved: {_document.FilePath}");
             }
             catch (Exception ex)
             {
@@ -136,9 +181,6 @@ namespace JsonFormatterApp.ViewModels
 
         public void SaveFileAs()
         {
-            if (CurrentTab == null)
-                return;
-
             var dialog = new SaveFileDialog
             {
                 Filter = "JSON Files (*.json)|*.json|Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
@@ -150,9 +192,9 @@ namespace JsonFormatterApp.ViewModels
             {
                 try
                 {
-                    _fileService.WriteFile(dialog.FileName, CurrentTab.JsonText);
-                    CurrentTab.FilePath = dialog.FileName;
-                    CurrentTab.IsDirty = false;
+                    _fileService.WriteFile(dialog.FileName, _document.JsonText);
+                    _document.FilePath = dialog.FileName;
+                    _document.IsDirty = false;
                     UpdateStatus($"Saved: {dialog.FileName}");
                     LoadRecentFiles();
                 }
@@ -168,14 +210,36 @@ namespace JsonFormatterApp.ViewModels
             if (string.IsNullOrEmpty(filePath))
                 return;
 
+            // Check for unsaved changes
+            if (_document.IsDirty)
+            {
+                var result = MessageBox.Show(
+                    "Do you want to save changes to the current document?",
+                    "Unsaved Changes",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    SaveFile();
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
+            }
+
             try
             {
                 var content = _fileService.ReadFile(filePath);
-                var newTab = _tabManager.CreateTab(content, filePath);
+                _document.SetJsonTextWithoutDirty(content);
+                _document.FilePath = filePath;
+                _document.IsDirty = false;
 
                 // Notify that views should be refreshed
-                _eventAggregator.Publish(new RefreshViewsMessage { Tab = newTab });
+                _eventAggregator.Publish(new RefreshViewsMessage());
 
+                UpdateStatus($"Opened: {filePath}");
                 LoadRecentFiles();
             }
             catch (Exception ex)
@@ -201,11 +265,7 @@ namespace JsonFormatterApp.ViewModels
 
         private void UpdateStatus(string message)
         {
-            if (CurrentTab != null)
-            {
-                CurrentTab.StatusMessage = message;
-            }
-
+            _document.StatusMessage = message;
             _eventAggregator.Publish(new StatusUpdateMessage { Message = message });
         }
 

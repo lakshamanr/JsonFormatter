@@ -1,0 +1,150 @@
+{
+  "app": {
+    "id": "app_9f3a21",
+    "name": "TestSuite Pro",
+    "version": "3.4.1",
+    "environment": "staging",
+    "released": true,
+    "releaseDate": "2025-01-15T10:42:18Z",
+    "supportedLocales": ["en-US", "fr-FR", "de-DE", "ja-JP"]
+  },
+
+  "user": {
+    "id": 104982,
+    "username": "lakshaman_dev",
+    "profile": {
+      "firstName": "Lakshaman",
+      "lastName": "R",
+      "email": "lakshaman@example.com",
+      "phone": null,
+      "preferences": {
+        "theme": "dark",
+        "notifications": {
+          "email": true,
+          "sms": false,
+          "push": true,
+          "categories": ["system", "security", "marketing"]
+        },
+        "language": "en",
+        "timezone": "Asia/Kolkata"
+      }
+    },
+    "roles": [
+      {
+        "name": "admin",
+        "permissions": ["read", "write", "delete", "audit"]
+      },
+      {
+        "name": "tester",
+        "permissions": ["read", "write"]
+      }
+    ],
+    "lastLogin": {
+      "timestamp": "2025-12-20T08:15:30Z",
+      "ip": "192.168.1.44",
+      "device": {
+        "type": "mobile",
+        "os": "Android",
+        "osVersion": "14",
+        "appVersion": "3.4.1"
+      }
+    }
+  },
+
+  "features": [
+    {
+      "featureId": "FT-001",
+      "name": "Authentication",
+      "enabled": true,
+      "config": {
+        "multiFactor": true,
+        "methods": ["password", "otp", "biometric"],
+        "retryPolicy": {
+          "maxAttempts": 5,
+          "lockoutDurationSeconds": 900
+        }
+      }
+    },
+    {
+      "featureId": "FT-002",
+      "name": "Payments",
+      "enabled": false,
+      "config": {
+        "currency": "INR",
+        "supportedMethods": ["card", "upi", "netbanking"],
+        "limits": {
+          "daily": 50000,
+          "monthly": 1000000
+        }
+      }
+    }
+  ],
+
+  "transactions": [
+    {
+      "transactionId": "txn_001",
+      "amount": 1299.99,
+      "currency": "INR",
+      "status": "SUCCESS",
+      "createdAt": "2025-12-18T14:21:10Z",
+      "items": [
+        {
+          "sku": "SKU-101",
+          "name": "Premium Subscription",
+          "quantity": 1,
+          "price": 1299.99,
+          "metadata": {
+            "durationMonths": 12,
+            "autoRenew": true
+          }
+        }
+      ],
+      "auditTrail": [
+        {
+          "step": "INITIATED",
+          "timestamp": "2025-12-18T14:20:58Z"
+        },
+        {
+          "step": "COMPLETED",
+          "timestamp": "2025-12-18T14:21:10Z"
+        }
+      ]
+    }
+  ],
+
+  "system": {
+    "health": "OK",
+    "uptimeSeconds": 987654,
+    "metrics": {
+      "cpu": {
+        "usagePercent": 63.4,
+        "cores": 8
+      },
+      "memory": {
+        "totalMB": 16384,
+        "usedMB": 9821
+      },
+      "disk": [
+        {
+          "mount": "/",
+          "totalGB": 512,
+          "freeGB": 123.5
+        },
+        {
+          "mount": "/data",
+          "totalGB": 1024,
+          "freeGB": 640.2
+        }
+      ]
+    }
+  },
+
+  "errors": [],
+  "debug": {
+    "requestId": "req-acde-4421",
+    "flags": {
+      "mockMode": true,
+      "verboseLogging": false
+    }
+  }
+}

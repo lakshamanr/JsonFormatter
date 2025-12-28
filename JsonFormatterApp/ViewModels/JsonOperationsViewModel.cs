@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using JsonFormatterApp.Helpers;
@@ -22,7 +23,8 @@ namespace JsonFormatterApp.ViewModels
         private readonly DiffService _diffService;
         private readonly SchemaValidationService _schemaValidationService;
         private readonly FileService _fileService;
-        private readonly TabManagerViewModel _tabManager;
+        private readonly TableExportService _tableExportService;
+        private readonly DocumentModel _document;
         private int _indentSize = 2;
 
         public JsonOperationsViewModel(
@@ -33,7 +35,7 @@ namespace JsonFormatterApp.ViewModels
             DiffService diffService,
             SchemaValidationService schemaValidationService,
             FileService fileService,
-            TabManagerViewModel tabManager)
+            DocumentModel document)
         {
             _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _jsonService = jsonService ?? throw new ArgumentNullException(nameof(jsonService));
@@ -42,14 +44,13 @@ namespace JsonFormatterApp.ViewModels
             _diffService = diffService ?? throw new ArgumentNullException(nameof(diffService));
             _schemaValidationService = schemaValidationService ?? throw new ArgumentNullException(nameof(schemaValidationService));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-            _tabManager = tabManager ?? throw new ArgumentNullException(nameof(tabManager));
+            _tableExportService = new TableExportService();
+            _document = document ?? throw new ArgumentNullException(nameof(document));
 
             InitializeCommands();
 
             // Subscribe to events
-            _eventAggregator.Subscribe<TabSelectedMessage>(OnTabSelected);
             _eventAggregator.Subscribe<RefreshViewsMessage>(OnRefreshViews);
-            _eventAggregator.Subscribe<TabContentChangedMessage>(OnTabContentChanged);
         }
 
         #region Properties
@@ -59,8 +60,6 @@ namespace JsonFormatterApp.ViewModels
             get => _indentSize;
             set => SetProperty(ref _indentSize, value);
         }
-
-        private TabItem? CurrentTab => _tabManager.SelectedTab;
 
         #endregion
 
@@ -72,84 +71,38 @@ namespace JsonFormatterApp.ViewModels
         public ICommand BuildTreeCommand { get; private set; } = null!;
         public ICommand BuildTableCommand { get; private set; } = null!;
         public ICommand CompareJsonCommand { get; private set; } = null!;
-        public ICommand CompareTabsCommand { get; private set; } = null!;
         public ICommand ValidateSchemaCommand { get; private set; } = null!;
         public ICommand CopyCommand { get; private set; } = null!;
         public ICommand PasteCommand { get; private set; } = null!;
+        public ICommand ExportTableToCsvCommand { get; private set; } = null!;
+        public ICommand ExportTableToHtmlCommand { get; private set; } = null!;
+        public ICommand ExportTableToJsonCommand { get; private set; } = null!;
 
         #endregion
 
         private void InitializeCommands()
         {
-            FormatJsonCommand = new RelayCommand(_ => FormatJson(), _ => CurrentTab != null);
-            MinifyJsonCommand = new RelayCommand(_ => MinifyJson(), _ => CurrentTab != null);
-            ValidateJsonCommand = new RelayCommand(_ => ValidateJson(), _ => CurrentTab != null);
-            BuildTreeCommand = new RelayCommand(_ => BuildTree(), _ => CurrentTab != null);
-            BuildTableCommand = new RelayCommand(_ => BuildTable(), _ => CurrentTab != null);
-            CompareJsonCommand = new RelayCommand(_ => CompareJson(), _ => CurrentTab != null);
-            CompareTabsCommand = new RelayCommand(_ => CompareTabs(), _ => _tabManager.Tabs.Count >= 2);
-            ValidateSchemaCommand = new RelayCommand(_ => ValidateSchema(), _ => CurrentTab != null);
-            CopyCommand = new RelayCommand(_ => CopyToClipboard(), _ => CurrentTab != null);
+            FormatJsonCommand = new RelayCommand(_ => FormatJson(), _ => true);
+            MinifyJsonCommand = new RelayCommand(_ => MinifyJson(), _ => true);
+            ValidateJsonCommand = new RelayCommand(_ => ValidateJson(), _ => true);
+            BuildTreeCommand = new RelayCommand(_ => BuildTree(), _ => true);
+            BuildTableCommand = new RelayCommand(_ => BuildTable(), _ => true);
+            CompareJsonCommand = new RelayCommand(_ => CompareJson(), _ => true);
+            ValidateSchemaCommand = new RelayCommand(_ => ValidateSchema(), _ => true);
+            CopyCommand = new RelayCommand(_ => CopyToClipboard(), _ => true);
             PasteCommand = new RelayCommand(_ => PasteFromClipboard());
+            ExportTableToCsvCommand = new RelayCommand(_ => ExportTableToCsv(), _ => _document.SelectedTable != null);
+            ExportTableToHtmlCommand = new RelayCommand(_ => ExportTableToHtml(), _ => _document.SelectedTable != null);
+            ExportTableToJsonCommand = new RelayCommand(_ => ExportTableToJson(), _ => _document.SelectedTable != null);
         }
 
         #region Event Handlers
 
-        private void OnTabSelected(TabSelectedMessage message)
-        {
-            if (message.SelectedTab != null)
-            {
-                // Only refresh views if the tab has JSON content
-                if (!string.IsNullOrWhiteSpace(message.SelectedTab.JsonText))
-                {
-                    ValidateJson();
-                    BuildTree();
-                    BuildTable();
-                }
-                else
-                {
-                    // Clear views for empty tabs
-                    message.SelectedTab.IsValid = true;
-                    message.SelectedTab.StatusMessage = "Ready";
-                    message.SelectedTab.TreeNodes.Clear();
-                    message.SelectedTab.TableData = null;
-                }
-            }
-
-            // Refresh command can execute states
-            CommandManager.InvalidateRequerySuggested();
-        }
-
         private void OnRefreshViews(RefreshViewsMessage message)
         {
-            if (message.Tab == _tabManager.SelectedTab)
-            {
-                ValidateJson();
-                BuildTree();
-                BuildTable();
-            }
-        }
-
-        private void OnTabContentChanged(TabContentChangedMessage message)
-        {
-            // Auto-refresh views when content changes in the selected tab
-            if (message.Tab == _tabManager.SelectedTab)
-            {
-                if (!string.IsNullOrWhiteSpace(message.Tab.JsonText))
-                {
-                    ValidateJson();
-                    BuildTree();
-                    BuildTable();
-                }
-                else
-                {
-                    // Clear views for empty content
-                    message.Tab.IsValid = true;
-                    message.Tab.StatusMessage = "Ready";
-                    message.Tab.TreeNodes.Clear();
-                    message.Tab.TableData = null;
-                }
-            }
+            ValidateJson();
+            BuildTree();
+            BuildTable();
         }
 
         #endregion
@@ -158,10 +111,7 @@ namespace JsonFormatterApp.ViewModels
 
         private void FormatJson()
         {
-            if (CurrentTab == null)
-                return;
-
-            if (string.IsNullOrWhiteSpace(CurrentTab.JsonText))
+            if (string.IsNullOrWhiteSpace(_document.JsonText))
             {
                 UpdateStatus("No JSON content to format");
                 MessageBox.Show("Please enter some JSON content first.", "No Content", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -170,7 +120,7 @@ namespace JsonFormatterApp.ViewModels
 
             try
             {
-                CurrentTab.JsonText = _jsonService.FormatJson(CurrentTab.JsonText, IndentSize);
+                _document.JsonText = _jsonService.FormatJson(_document.JsonText, IndentSize);
                 UpdateStatus("JSON formatted successfully");
                 BuildTree();
                 BuildTable();
@@ -184,10 +134,7 @@ namespace JsonFormatterApp.ViewModels
 
         private void MinifyJson()
         {
-            if (CurrentTab == null)
-                return;
-
-            if (string.IsNullOrWhiteSpace(CurrentTab.JsonText))
+            if (string.IsNullOrWhiteSpace(_document.JsonText))
             {
                 UpdateStatus("No JSON content to minify");
                 MessageBox.Show("Please enter some JSON content first.", "No Content", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -196,7 +143,7 @@ namespace JsonFormatterApp.ViewModels
 
             try
             {
-                CurrentTab.JsonText = _jsonService.MinifyJson(CurrentTab.JsonText);
+                _document.JsonText = _jsonService.MinifyJson(_document.JsonText);
                 UpdateStatus("JSON minified successfully");
             }
             catch (Exception ex)
@@ -208,30 +155,26 @@ namespace JsonFormatterApp.ViewModels
 
         public void ValidateJson()
         {
-            if (CurrentTab == null)
-                return;
-
-            var result = _jsonService.ValidateJson(CurrentTab.JsonText);
-            CurrentTab.IsValid = result.IsValid;
+            var result = _jsonService.ValidateJson(_document.JsonText);
+            _document.IsValid = result.IsValid;
 
             if (result.IsValid)
             {
-                CurrentTab.StatusMessage = "✓ Valid JSON";
+                _document.StatusMessage = "Valid JSON";
             }
             else
             {
-                CurrentTab.StatusMessage = $"✗ Invalid JSON: {result.ErrorMessage} (Line {result.LineNumber}, Col {result.ColumnNumber})";
+                _document.StatusMessage = $"Invalid JSON: {result.ErrorMessage} (Line {result.LineNumber}, Col {result.ColumnNumber})";
             }
         }
 
         public void BuildTree()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                CurrentTab.TreeNodes = _treeService.BuildTree(CurrentTab.JsonText);
+                _document.TreeNodes = _treeService.BuildTree(_document.JsonText);
+                // Initialize filtered tree nodes
+                _document.ApplyTreeFilter();
             }
             catch (Exception ex)
             {
@@ -241,16 +184,37 @@ namespace JsonFormatterApp.ViewModels
 
         public void BuildTable()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                CurrentTab.TableData = _tableService.ConvertToTable(CurrentTab.JsonText);
+                _document.TableData = _tableService.ConvertToTable(_document.JsonText);
+                BuildAllTables();
             }
             catch (Exception ex)
             {
                 UpdateStatus($"Table build error: {ex.Message}");
+            }
+        }
+
+        public void BuildAllTables()
+        {
+            try
+            {
+                var tables = _tableService.ExtractAllTables(_document.JsonText);
+                _document.AllTables.Clear();
+                foreach (var table in tables)
+                {
+                    _document.AllTables.Add(table);
+                }
+
+                // Select the first table by default
+                if (_document.AllTables.Any())
+                {
+                    _document.SelectedTable = _document.AllTables[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"All tables build error: {ex.Message}");
             }
         }
 
@@ -260,9 +224,6 @@ namespace JsonFormatterApp.ViewModels
 
         private void CompareJson()
         {
-            if (CurrentTab == null)
-                return;
-
             var dialog = new OpenFileDialog
             {
                 Filter = "JSON Files (*.json)|*.json|Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
@@ -275,8 +236,8 @@ namespace JsonFormatterApp.ViewModels
                 {
                     var compareJson = _fileService.ReadFile(dialog.FileName);
                     var compareWindow = new CompareWindow(
-                        CurrentTab.Header,
-                        CurrentTab.JsonText,
+                        _document.GetDisplayTitle(),
+                        _document.JsonText,
                         System.IO.Path.GetFileName(dialog.FileName),
                         compareJson
                     );
@@ -289,147 +250,12 @@ namespace JsonFormatterApp.ViewModels
             }
         }
 
-        private void CompareTabs()
-        {
-            if (_tabManager.Tabs.Count < 2)
-            {
-                MessageBox.Show("You need at least 2 tabs open to compare.", "Compare Tabs", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            // Create a selection dialog with theme support
-            var selectionWindow = new Window
-            {
-                Title = "Select Tabs to Compare",
-                Width = 450,
-                Height = 350,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                Resources = Application.Current.Resources
-            };
-
-            var stackPanel = new System.Windows.Controls.StackPanel { Margin = new Thickness(20) };
-
-            var titleBlock = new System.Windows.Controls.TextBlock
-            {
-                Text = "Compare Tabs",
-                FontSize = 18,
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(0, 0, 0, 20)
-            };
-
-            var label1 = new System.Windows.Controls.TextBlock
-            {
-                Text = "Select first tab:",
-                Margin = new Thickness(0, 0, 0, 5),
-                FontSize = 12
-            };
-
-            var combo1 = new System.Windows.Controls.ComboBox
-            {
-                ItemsSource = _tabManager.Tabs,
-                DisplayMemberPath = "Header",
-                SelectedIndex = CurrentTab != null ? _tabManager.Tabs.IndexOf(CurrentTab) : 0,
-                Margin = new Thickness(0, 0, 0, 20),
-                Padding = new Thickness(5),
-                FontSize = 12
-            };
-
-            var label2 = new System.Windows.Controls.TextBlock
-            {
-                Text = "Select second tab:",
-                Margin = new Thickness(0, 0, 0, 5),
-                FontSize = 12
-            };
-
-            var combo2 = new System.Windows.Controls.ComboBox
-            {
-                ItemsSource = _tabManager.Tabs,
-                DisplayMemberPath = "Header",
-                SelectedIndex = _tabManager.Tabs.Count > 1 ? (CurrentTab != null && _tabManager.Tabs.IndexOf(CurrentTab) == 0 ? 1 : 0) : 0,
-                Margin = new Thickness(0, 0, 0, 30),
-                Padding = new Thickness(5),
-                FontSize = 12
-            };
-
-            var buttonPanel = new System.Windows.Controls.StackPanel
-            {
-                Orientation = System.Windows.Controls.Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-
-            var compareButton = new System.Windows.Controls.Button
-            {
-                Content = "Compare",
-                Width = 100,
-                Height = 35,
-                Margin = new Thickness(5),
-                FontSize = 12,
-                FontWeight = FontWeights.Bold
-            };
-
-            var cancelButton = new System.Windows.Controls.Button
-            {
-                Content = "Cancel",
-                Width = 100,
-                Height = 35,
-                Margin = new Thickness(5),
-                FontSize = 12
-            };
-
-            compareButton.Click += (s, e) =>
-            {
-                var tab1 = combo1.SelectedItem as TabItem;
-                var tab2 = combo2.SelectedItem as TabItem;
-
-                if (tab1 != null && tab2 != null && tab1.Id != tab2.Id)
-                {
-                    try
-                    {
-                        var compareWindow = new CompareWindow(
-                            tab1.Header,
-                            tab1.JsonText,
-                            tab2.Header,
-                            tab2.JsonText
-                        );
-                        selectionWindow.Close();
-                        compareWindow.ShowDialog();
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Error comparing tabs: {ex.Message}", "Comparison Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Please select two different tabs.", "Compare Tabs", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            };
-
-            cancelButton.Click += (s, e) => selectionWindow.Close();
-
-            buttonPanel.Children.Add(compareButton);
-            buttonPanel.Children.Add(cancelButton);
-
-            stackPanel.Children.Add(titleBlock);
-            stackPanel.Children.Add(label1);
-            stackPanel.Children.Add(combo1);
-            stackPanel.Children.Add(label2);
-            stackPanel.Children.Add(combo2);
-            stackPanel.Children.Add(buttonPanel);
-
-            selectionWindow.Content = stackPanel;
-            selectionWindow.ShowDialog();
-        }
-
         #endregion
 
         #region Schema Validation
 
         private void ValidateSchema()
         {
-            if (CurrentTab == null)
-                return;
-
             var dialog = new OpenFileDialog
             {
                 Filter = "JSON Schema Files (*.schema.json)|*.schema.json|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
@@ -441,7 +267,7 @@ namespace JsonFormatterApp.ViewModels
                 try
                 {
                     var schemaText = _fileService.ReadFile(dialog.FileName);
-                    var result = _schemaValidationService.ValidateAgainstSchema(CurrentTab.JsonText, schemaText);
+                    var result = _schemaValidationService.ValidateAgainstSchema(_document.JsonText, schemaText);
 
                     if (result.IsValid)
                     {
@@ -466,12 +292,9 @@ namespace JsonFormatterApp.ViewModels
 
         private void CopyToClipboard()
         {
-            if (CurrentTab == null)
-                return;
-
             try
             {
-                Clipboard.SetText(CurrentTab.JsonText);
+                Clipboard.SetText(_document.JsonText);
                 UpdateStatus("Copied to clipboard");
             }
             catch (Exception ex)
@@ -486,19 +309,11 @@ namespace JsonFormatterApp.ViewModels
             {
                 if (Clipboard.ContainsText())
                 {
-                    if (CurrentTab == null)
-                    {
-                        _tabManager.CreateNewTab();
-                    }
-
-                    if (CurrentTab != null)
-                    {
-                        CurrentTab.JsonText = Clipboard.GetText();
-                        UpdateStatus("Pasted from clipboard");
-                        ValidateJson();
-                        BuildTree();
-                        BuildTable();
-                    }
+                    _document.JsonText = Clipboard.GetText();
+                    UpdateStatus("Pasted from clipboard");
+                    ValidateJson();
+                    BuildTree();
+                    BuildTable();
                 }
             }
             catch (Exception ex)
@@ -513,12 +328,102 @@ namespace JsonFormatterApp.ViewModels
 
         private void UpdateStatus(string message)
         {
-            if (CurrentTab != null)
+            _document.StatusMessage = message;
+            _eventAggregator.Publish(new StatusUpdateMessage { Message = message });
+        }
+
+        #endregion
+
+        #region Table Export Operations
+
+        private void ExportTableToCsv()
+        {
+            if (_document.SelectedTable == null)
             {
-                CurrentTab.StatusMessage = message;
+                MessageBox.Show("Please select a table to export.", "No Table Selected", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
             }
 
-            _eventAggregator.Publish(new StatusUpdateMessage { Message = message });
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
+                FileName = $"{_document.SelectedTable.Name}.csv",
+                Title = "Export Table to CSV"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    _tableExportService.ExportToCsv(_document.SelectedTable, dialog.FileName);
+                    UpdateStatus($"Table exported to CSV: {dialog.FileName}");
+                    MessageBox.Show($"Table successfully exported to:\n{dialog.FileName}", "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to export table:\n{ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportTableToHtml()
+        {
+            if (_document.SelectedTable == null)
+            {
+                MessageBox.Show("Please select a table to export.", "No Table Selected", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "HTML Files (*.html)|*.html|All Files (*.*)|*.*",
+                FileName = $"{_document.SelectedTable.Name}.html",
+                Title = "Export Table to HTML"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    _tableExportService.ExportToHtml(_document.SelectedTable, dialog.FileName);
+                    UpdateStatus($"Table exported to HTML: {dialog.FileName}");
+                    MessageBox.Show($"Table successfully exported to:\n{dialog.FileName}", "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to export table:\n{ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportTableToJson()
+        {
+            if (_document.SelectedTable == null)
+            {
+                MessageBox.Show("Please select a table to export.", "No Table Selected", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
+                FileName = $"{_document.SelectedTable.Name}.json",
+                Title = "Export Table to JSON"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    _tableExportService.ExportToJson(_document.SelectedTable, dialog.FileName);
+                    UpdateStatus($"Table exported to JSON: {dialog.FileName}");
+                    MessageBox.Show($"Table successfully exported to:\n{dialog.FileName}", "Export Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to export table:\n{ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         #endregion
