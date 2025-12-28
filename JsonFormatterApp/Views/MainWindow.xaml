@@ -107,16 +107,6 @@
                 <TextBlock Text="💾 Save" FontSize="12"/>
             </Button>
             <Separator/>
-            <Button Command="{Binding FormatJsonCommand}" ToolTip="Format JSON (Ctrl+F)" Padding="5">
-                <TextBlock Text="✨ Format" FontSize="12" FontWeight="Bold"/>
-            </Button>
-            <Button Command="{Binding MinifyJsonCommand}" ToolTip="Minify JSON (Ctrl+M)" Padding="5">
-                <TextBlock Text="⚡ Minify" FontSize="12" FontWeight="Bold"/>
-            </Button>
-            <Button Command="{Binding ValidateJsonCommand}" ToolTip="Validate JSON" Padding="5">
-                <TextBlock Text="✓ Validate" FontSize="12" FontWeight="Bold"/>
-            </Button>
-            <Separator/>
             <Button Command="{Binding BuildTreeCommand}" ToolTip="Refresh Tree View" Padding="5">
                 <TextBlock Text="🌳 Tree" FontSize="12"/>
             </Button>
@@ -153,6 +143,7 @@
                 </ItemsPanelTemplate>
             </TabControl.ItemsPanel>
 
+            <!-- Tab header template -->
             <TabControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -171,10 +162,10 @@
                 </DataTemplate>
             </TabControl.ItemTemplate>
 
-            <!-- Each tab creates its own TabContentControl instance with its own TextEditor -->
+            <!-- CRITICAL: Bind directly to the Content property which stores each tab's unique TabContentControl -->
             <TabControl.ContentTemplate>
                 <DataTemplate>
-                    <views:TabContentControl />
+                    <ContentControl Content="{Binding Content}" />
                 </DataTemplate>
             </TabControl.ContentTemplate>
         </TabControl>

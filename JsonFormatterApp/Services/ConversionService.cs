@@ -297,7 +297,16 @@ namespace JsonFormatterApp.Services
                 return str;
 
             var words = str.Split(new[] { '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            return string.Join("", words.Select(w => char.ToUpper(w[0]) + w.Substring(1)));
+
+            // Filter out empty strings and convert each word
+            var pascalWords = words
+                .Where(w => !string.IsNullOrEmpty(w))
+                .Select(w => char.ToUpper(w[0]) + (w.Length > 1 ? w.Substring(1) : string.Empty));
+
+            var result = string.Join("", pascalWords);
+
+            // If result is empty, return the original string
+            return string.IsNullOrEmpty(result) ? str : result;
         }
 
         private string SanitizeXmlName(string name)
@@ -315,7 +324,9 @@ namespace JsonFormatterApp.Services
             }
 
             var result = sb.ToString();
-            if (char.IsDigit(result[0]))
+
+            // Check if result is empty or starts with a digit
+            if (string.IsNullOrEmpty(result) || char.IsDigit(result[0]))
                 result = "_" + result;
 
             return result;

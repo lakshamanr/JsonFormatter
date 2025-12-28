@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using JsonFormatterApp.Models;
 
 namespace JsonFormatterApp.Services
 {
     public class FileService
     {
-        private const string RecentFilesFileName = "recent_files.txt";
+        private const string RecentFilesFileName = "recent_files.json";
         private const int MaxRecentFiles = 10;
         private readonly string _appDataPath;
 
@@ -68,24 +70,24 @@ namespace JsonFormatterApp.Services
 
             try
             {
-                var lines = File.ReadAllLines(filePath);
-                foreach (var line in lines)
+                var json = File.ReadAllText(filePath);
+                var deserializedFiles = JsonConvert.DeserializeObject<List<RecentFile>>(json);
+
+                if (deserializedFiles != null)
                 {
-                    var parts = line.Split('|');
-                    if (parts.Length == 2 && File.Exists(parts[0]))
-                    {
-                        recentFiles.Add(new RecentFile
-                        {
-                            FilePath = parts[0],
-                            LastAccessed = DateTime.Parse(parts[1])
-                        });
-                    }
+                    // Only include files that still exist
+                    recentFiles = deserializedFiles
+                        .Where(f => File.Exists(f.FilePath))
+                        .OrderByDescending(f => f.LastAccessed)
+                        .Take(MaxRecentFiles)
+                        .ToList();
                 }
 
-                return recentFiles.OrderByDescending(f => f.LastAccessed).Take(MaxRecentFiles).ToList();
+                return recentFiles;
             }
             catch
             {
+                // Return empty list if deserialization fails (corrupted file, old format, etc.)
                 return recentFiles;
             }
         }
@@ -111,12 +113,12 @@ namespace JsonFormatterApp.Services
                     LastAccessed = DateTime.Now
                 });
 
-                var lines = recentFiles
-                    .Take(MaxRecentFiles)
-                    .Select(f => $"{f.FilePath}|{f.LastAccessed:O}");
+                // Keep only the max number of recent files
+                var filesToSave = recentFiles.Take(MaxRecentFiles).ToList();
 
                 var recentFilePath = Path.Combine(_appDataPath, RecentFilesFileName);
-                File.WriteAllLines(recentFilePath, lines);
+                var json = JsonConvert.SerializeObject(filesToSave, Formatting.Indented);
+                File.WriteAllText(recentFilePath, json);
             }
             catch
             {

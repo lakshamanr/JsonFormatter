@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using JsonFormatterApp.Helpers;
+using JsonFormatterApp.Infrastructure;
 using JsonFormatterApp.Models;
 
 namespace JsonFormatterApp.Models
@@ -16,6 +17,21 @@ namespace JsonFormatterApp.Models
         private System.Data.DataTable? _tableData;
         private string _statusMessage = "Ready";
         private bool _isInitializing = false;
+        private object? _content;
+
+        // Event aggregator for publishing changes (will be injected)
+        public static IEventAggregator? EventAggregator { get; set; }
+
+        public TabItem()
+        {
+            // Create a unique content control for this tab that will never be recycled
+            var contentControl = new Views.TabContentControl();
+
+            // Set the DataContext to this TabItem so bindings work
+            contentControl.DataContext = this;
+
+            _content = contentControl;
+        }
 
         public string Header
         {
@@ -34,6 +50,9 @@ namespace JsonFormatterApp.Models
                     if (!_isInitializing)
                     {
                         IsDirty = true;
+
+                        // Notify that content changed for auto-refresh
+                        EventAggregator?.Publish(new TabContentChangedMessage { Tab = this });
                     }
                 }
             }
@@ -88,6 +107,15 @@ namespace JsonFormatterApp.Models
         }
 
         public Guid Id { get; } = Guid.NewGuid();
+
+        /// <summary>
+        /// Dedicated content control instance for this tab (never recycled)
+        /// </summary>
+        public object Content
+        {
+            get => _content!;
+            set => SetProperty(ref _content, value);
+        }
 
         /// <summary>
         /// Set JSON text without marking the tab as dirty (for initial load)

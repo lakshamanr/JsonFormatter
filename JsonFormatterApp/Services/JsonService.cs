@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Text;
 using System.Text.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,13 +18,20 @@ namespace JsonFormatterApp.Services
             try
             {
                 var jToken = JToken.Parse(jsonText);
-                var formatting = indentSize == 2 ? Formatting.Indented : Formatting.Indented;
-                var settings = new JsonSerializerSettings
-                {
-                    Formatting = formatting
-                };
 
-                return JsonConvert.SerializeObject(jToken, settings);
+                // Use JsonTextWriter to support custom indent sizes
+                var sb = new StringBuilder();
+                using (var sw = new StringWriter(sb))
+                using (var writer = new JsonTextWriter(sw))
+                {
+                    writer.Formatting = Formatting.Indented;
+                    writer.IndentChar = ' ';
+                    writer.Indentation = indentSize;
+
+                    jToken.WriteTo(writer);
+                }
+
+                return sb.ToString();
             }
             catch (Exception ex)
             {
